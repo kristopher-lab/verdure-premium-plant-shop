@@ -2,7 +2,7 @@
 
 A polished, responsive e-commerce storefront for selling houseplants and plant-care accessories. Built with Cloudflare Workers + Durable Objects for seamless backend persistence, featuring a stunning single-page layout with hero section, product grid, filters, quick-view modals, and a lightweight cart system.
 
-[cloudflarebutton]
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/kristopher-lab/verdure-premium-plant-shop)
 
 ## Overview
 
@@ -102,7 +102,7 @@ Deploy to Cloudflare Workers for global edge execution with zero-config scaling.
 
 For one-click deployment:
 
-[cloudflarebutton]
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/kristopher-lab/verdure-premium-plant-shop)
 
 ### Post-Deployment
 - Monitor via Cloudflare Dashboard > Workers > Your Project.
