@@ -1,7 +1,7 @@
-import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Leaf } from 'lucide-react';
+import { Search, Leaf, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -10,26 +10,26 @@ import type { Product } from '@shared/types';
 import { ProductCard, ProductCardSkeleton } from '@/components/ProductCard';
 import { ProductQuickView } from '@/components/ProductQuickView';
 import { CartDrawer } from '@/components/CartDrawer';
-import { useCartMutations } from '@/hooks/use-cart';
+import { useCartActions, useCartUi } from '@/hooks/use-cart';
 import { useProducts } from '@/hooks/use-products';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
 import { OrderConfirmation } from '@/components/OrderConfirmation';
-import { useCartUi, useCartUiActions } from '@/hooks/use-cart';
+import { useQueryClient } from '@tanstack/react-query';
 const categories = ['Indoor', 'Outdoor', 'Succulents', 'Cacti'];
 const tags = ['Full Sun', 'Partial Shade', 'Low Light', 'Pet-Friendly', 'Air Purifying'];
 export function HomePage() {
-  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
-  const { addToCart } = useCartMutations();
-  const { orderId } = useCartUi();
-  const { setOrderId } = useCartUiActions();
-  const [searchTerm, setSearchTerm] = useState('');
+  const { addToCart, isAuthenticated, logout } = useCartActions();
+  const { orderId, setOrderId } = useCartUi().actions;
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
   const [filters, setFilters] = useState<{ categories: string[], tags: string[], priceRange: [number, number] }>({
-    categories: [],
-    tags: [],
-    priceRange: [0, 200],
+    categories: searchParams.getAll('category') || [],
+    tags: searchParams.getAll('tag') || [],
+    priceRange: [Number(searchParams.get('minPrice') || 0), Number(searchParams.get('maxPrice') || 200)],
   });
   const { data: filteredProducts, isLoading } = useProducts({
     searchTerm,
@@ -41,11 +41,19 @@ export function HomePage() {
     setFilters(prev => {
       const current = prev[type];
       const next = current.includes(value) ? current.filter(item => item !== value) : [...current, value];
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete(type === 'categories' ? 'category' : 'tag');
+      next.forEach(item => newParams.append(type === 'categories' ? 'category' : 'tag', item));
+      setSearchParams(newParams);
       return { ...prev, [type]: next };
     });
   };
   const handlePriceChange = (value: number[]) => {
     setFilters(prev => ({ ...prev, priceRange: [value[0], value[1]] }));
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('minPrice', String(value[0]));
+    newParams.set('maxPrice', String(value[1]));
+    setSearchParams(newParams);
   };
   const handleAddToCart = (product: Product, variantSku: string, quantity: number) => {
     addToCart({ product, variantSku, quantity });
@@ -68,7 +76,7 @@ export function HomePage() {
         <AccordionItem value="price">
           <AccordionTrigger className="text-lg">Price Range</AccordionTrigger>
           <AccordionContent className="pt-4">
-            <Slider defaultValue={[0, 200]} max={200} step={10} onValueCommit={handlePriceChange} />
+            <Slider defaultValue={filters.priceRange} max={200} step={10} onValueCommit={handlePriceChange} />
             <div className="flex justify-between text-sm text-muted-foreground mt-2">
               <span>${filters.priceRange[0]}</span>
               <span>${filters.priceRange[1]}</span>
@@ -97,7 +105,12 @@ export function HomePage() {
             <Leaf className="h-8 w-8 text-primary" />
             <h1 className="text-2xl font-bold font-display text-primary">Verdure</h1>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            {isAuthenticated ? (
+              <Button variant="ghost" onClick={logout}><LogOut className="h-4 w-4 mr-2" /> Logout</Button>
+            ) : (
+              <Button asChild variant="ghost"><Link to="/login"><User className="h-4 w-4 mr-2" /> Login</Link></Button>
+            )}
             <ThemeToggle className="relative top-0 right-0" />
             <CartDrawer />
           </div>
@@ -137,12 +150,16 @@ export function HomePage() {
                     {isLoading
                       ? Array.from({ length: 9 }).map((_, i) => <ProductCardSkeleton key={i} />)
                       : filteredProducts?.map(product => (
-                          <ProductCard
+                          <div
                             key={product.id}
-                            product={product}
-                            onAddToCart={(prod, sku) => handleAddToCart(prod, sku, 1)}
-                            onQuickView={setQuickViewProduct}
-                          />
+                            onMouseEnter={() => queryClient.prefetchQuery({ queryKey: ['product', product.id] })}
+                          >
+                            <ProductCard
+                              product={product}
+                              onAddToCart={(prod, sku) => handleAddToCart(prod, sku, 1)}
+                              onQuickView={setQuickViewProduct}
+                            />
+                          </div>
                         ))}
                   </AnimatePresence>
                 </motion.div>

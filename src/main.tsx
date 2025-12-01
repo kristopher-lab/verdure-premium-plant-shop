@@ -13,6 +13,7 @@ import { RouteErrorBoundary } from '@/components/RouteErrorBoundary';
 import '@/index.css'
 import { HomePage } from '@/pages/HomePage'
 import ProductDetail from '@/pages/ProductDetail';
+import LoginPage from '@/pages/LoginPage';
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -30,6 +31,11 @@ const router = createBrowserRouter([
   {
     path: "/products/:slug",
     element: <ProductDetail />,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: "/login",
+    element: <LoginPage />,
     errorElement: <RouteErrorBoundary />,
   },
 ]);

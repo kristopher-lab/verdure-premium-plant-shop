@@ -7,7 +7,7 @@ import type { Product } from '@shared/types';
 import { Badge } from './ui/badge';
 type ProductCardProps = {
   product: Product;
-  onAddToCart: (productId: string, variantSku: string) => void;
+  onAddToCart: (product: Product, variantSku: string) => void;
   onQuickView: (product: Product) => void;
 };
 export function ProductCard({ product, onAddToCart, onQuickView }: ProductCardProps) {
@@ -25,7 +25,7 @@ export function ProductCard({ product, onAddToCart, onQuickView }: ProductCardPr
         <CardHeader className="p-0 border-b">
           <div className="overflow-hidden aspect-[4/3] relative">
             <img
-              src={product.images[0]}
+              src={product.images?.[0] ?? ''}
               alt={product.name}
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
@@ -51,7 +51,7 @@ export function ProductCard({ product, onAddToCart, onQuickView }: ProductCardPr
         <CardFooter className="p-4 pt-0">
           <Button
             className="w-full"
-            onClick={() => onAddToCart(product.id, product.variants[0].sku)}
+            onClick={() => onAddToCart(product, product.variants[0].sku)}
           >
             <Plus className="mr-2 h-4 w-4" /> Add to Cart
           </Button>

@@ -1,9 +1,14 @@
-import { ShoppingCart, X, Trash2 } from 'lucide-react';
+import { ShoppingCart, Trash2, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
-import { useCart, useCartActions } from '@/hooks/use-cart';
+import { useCart, useCartActions, useCartUi } from '@/hooks/use-cart';
 import type { CartItem } from '@shared/types';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { Input } from './ui/input';
+import { Badge } from './ui/badge';
+import { useState } from 'react';
 const formatPrice = (price: number) => `$${(price / 100).toFixed(2)}`;
 function CartItemView({ item }: { item: CartItem }) {
   const { updateQuantity, removeFromCart } = useCartActions();
@@ -17,9 +22,9 @@ function CartItemView({ item }: { item: CartItem }) {
       </div>
       <div className="flex flex-col items-end gap-2">
         <div className="flex items-center border rounded-md">
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.id, item.quantity - 1)}>-</Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity({ itemId: item.id, quantity: item.quantity - 1 })}>-</Button>
           <span className="w-8 text-center text-sm">{item.quantity}</span>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.id, item.quantity + 1)}>+</Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity({ itemId: item.id, quantity: item.quantity + 1 })}>+</Button>
         </div>
         <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive" onClick={() => removeFromCart(item.id)}>
           <Trash2 className="h-4 w-4 mr-1" /> Remove
@@ -29,9 +34,27 @@ function CartItemView({ item }: { item: CartItem }) {
   );
 }
 export function CartDrawer() {
-  const { cart, isCartOpen } = useCart();
-  const { toggleCart, checkout } = useCartActions();
+  const navigate = useNavigate();
+  const { data: cart } = useCart();
+  const { isCartOpen, discount, promoCode } = useCartUi();
+  const { toggleCart, checkout, isAuthenticated, applyPromoCode } = useCartActions();
+  const [promoInput, setPromoInput] = useState('');
   const itemCount = cart?.items.reduce((sum, item) => sum + item.quantity, 0) ?? 0;
+  const subtotal = cart?.subtotal ?? 0;
+  const total = subtotal * (1 - discount);
+  const handleCheckout = () => {
+    if (!isAuthenticated) {
+      toast.error('Please log in to checkout.');
+      toggleCart(false);
+      navigate('/login');
+      return;
+    }
+    if (!cart || cart.items.length === 0) {
+      toast.error('Your cart is empty.');
+      return;
+    }
+    checkout();
+  };
   return (
     <Sheet open={isCartOpen} onOpenChange={toggleCart}>
       <SheetTrigger asChild>
@@ -66,11 +89,27 @@ export function CartDrawer() {
           <SheetFooter className="mt-auto">
             <div className="w-full space-y-4">
               <Separator />
-              <div className="flex justify-between font-semibold text-lg">
-                <span>Subtotal</span>
-                <span>{formatPrice(cart.subtotal)}</span>
+              <div className="flex items-center gap-2">
+                <Input placeholder="Promo code" value={promoInput} onChange={(e) => setPromoInput(e.target.value)} />
+                <Button variant="outline" onClick={() => applyPromoCode(promoInput)}>Apply</Button>
               </div>
-              <Button size="lg" className="w-full btn-gradient" onClick={checkout}>
+              <div className="space-y-1">
+                <div className="flex justify-between">
+                  <span>Subtotal</span>
+                  <span>{formatPrice(subtotal)}</span>
+                </div>
+                {discount > 0 && (
+                  <div className="flex justify-between text-primary">
+                    <span>Discount <Badge variant="secondary">{promoCode}</Badge></span>
+                    <span>-{formatPrice(subtotal * discount)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between font-semibold text-lg">
+                  <span>Total</span>
+                  <span>{formatPrice(total)}</span>
+                </div>
+              </div>
+              <Button size="lg" className="w-full btn-gradient" onClick={handleCheckout}>
                 Proceed to Checkout
               </Button>
             </div>

@@ -1,5 +1,5 @@
 import { IndexedEntity } from "./core-utils";
-import type { Product, Cart, CartItem, Order } from "@shared/types";
+import type { Product, Cart, CartItem, Order, User } from "@shared/types";
 import { MOCK_PRODUCTS } from "@shared/mock-data";
 // PRODUCT ENTITY
 export class ProductEntity extends IndexedEntity<Product> {
@@ -24,6 +24,7 @@ export class CartEntity extends IndexedEntity<Cart> {
   static readonly indexName = "carts";
   static readonly initialState: Cart = {
     id: "",
+    userId: null,
     items: [],
     subtotal: 0,
     createdAt: 0,
@@ -107,4 +108,18 @@ export class OrderEntity extends IndexedEntity<Order> {
     customer: { name: "Guest", email: "guest@example.com" },
     createdAt: 0,
   };
+}
+// USER ENTITY
+export class UserEntity extends IndexedEntity<User> {
+  static readonly entityName = "user";
+  static readonly indexName = "users";
+  static readonly initialState: User = {
+    id: "",
+    email: "",
+    name: "",
+    createdAt: 0,
+  };
+  static seedData = [
+    { id: "user_1", email: "test@example.com", name: "Test User", createdAt: Date.now() }
+  ];
 }

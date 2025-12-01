@@ -33,6 +33,7 @@ export type CartItem = {
 };
 export type Cart = {
   id: string;
+  userId?: string | null;
   items: CartItem[];
   subtotal: number; // in cents
   createdAt: number;
@@ -49,11 +50,19 @@ export type Order = {
   };
   createdAt: number;
 };
-// Keep original demo types for compatibility if needed, can be removed later
 export interface User {
   id: string;
-  name: string;
+  email: string;
+  name?: string;
+  createdAt: number;
 }
+export interface AuthResponse {
+  success: boolean;
+  user?: User;
+  token?: string;
+  error?: string;
+}
+// Keep original demo types for compatibility if needed, can be removed later
 export interface Chat {
   id: string;
   title: string;
