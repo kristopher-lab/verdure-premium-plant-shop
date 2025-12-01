@@ -109,8 +109,8 @@ export default {
   		},
   		boxShadow: {
   			soft: '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
-  			glow: '0 0 20px -5px rgba(39, 83, 42, 0.3)',
-  			'glow-lg': '0 0 40px -10px rgba(39, 83, 42, 0.3)',
+  			glow: '0 0 25px -5px rgba(39, 83, 42, 0.4)',
+  			'glow-lg': '0 0 40px -10px rgba(39, 83, 42, 0.4)',
   			primary: '0 0 20px -5px hsl(var(--primary) / 0.4)',
   			glass: '0 8px 32px 0 rgba(31, 38, 135, 0.37)'
   		},
@@ -128,8 +128,9 @@ export default {
   				'100%': { transform: 'scale(1)', opacity: '1' }
   			},
   			shimmer: {
-  				'0%': { transform: 'translateX(-100%)' },
-  				'100%': { transform: 'translateX(100%)' }
+                '100%': {
+                    transform: 'translateX(100%)',
+                },
   			},
   			glow: {
   				'0%, 100%': { boxShadow: '0 0 20px -5px rgba(39, 83, 42, 0.3)' },
@@ -152,8 +153,8 @@ export default {
   			'fade-in': 'fade-in 0.6s ease-out',
   			'slide-up': 'slide-up 0.4s ease-out',
   			'scale-in': 'scale-in 0.3s ease-out',
-  			shimmer: 'shimmer 2s infinite',
-  			glow: 'glow 2s ease-in-out infinite',
+  			shimmer: 'shimmer 2s linear infinite',
+  			glow: 'glow 1.8s ease-in-out infinite',
             'button-glow': 'glow 1.5s ease-in-out infinite alternate',
   			float: 'float 8s ease-in-out infinite',
   			'accordion-down': 'accordion-down 0.2s ease-out',

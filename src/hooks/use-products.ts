@@ -9,16 +9,21 @@ type ProductFilters = {
   priceRange?: [number, number];
 };
 const fetchProducts = async (): Promise<{ items: Product[], next: string | null }> => {
-  return get('/api/products?limit=100'); // Fetch more to allow for client-side filtering
+  try {
+    return await get('/api/products?limit=100'); // Fetch more to allow for client-side filtering
+  } catch (error) {
+    console.error('Product fetch error:', error);
+    throw error;
+  }
 };
 export const useProducts = (filters: ProductFilters) => {
   return useQuery({
     queryKey: ['products'], // A single key for all products, filtering is done in select
     queryFn: fetchProducts,
-    staleTime: 1000 * 60 * 10, // 10 minutes
+    staleTime: 900000, // 15 minutes
     select: (data) => {
       try {
-        if (!data) return [];
+        if (!data?.items) return [];
         return data.items
           .filter(p => filters.searchTerm ? p.name.toLowerCase().includes(filters.searchTerm.toLowerCase()) : true)
           .filter(p => filters.categories && filters.categories.length > 0 ? filters.categories.includes(p.category) : true)
@@ -32,7 +37,12 @@ export const useProducts = (filters: ProductFilters) => {
   });
 };
 const fetchProductBySlug = async (slug: string): Promise<Product> => {
-  return get(`/api/products/slug/${slug}`);
+  try {
+    return await get(`/api/products/slug/${slug}`);
+  } catch (error) {
+    console.error(`Product fetch error for slug ${slug}:`, error);
+    throw error;
+  }
 };
 export const useProduct = (slug: string) => {
   const queryClient = useQueryClient();
@@ -40,7 +50,7 @@ export const useProduct = (slug: string) => {
     queryKey: ['product', slug],
     queryFn: () => fetchProductBySlug(slug),
     enabled: !!slug,
-    staleTime: 1000 * 60 * 10, // 10 minutes
+    staleTime: 900000, // 15 minutes
   });
   useEffect(() => {
     if (queryResult.data?.id) {
@@ -53,13 +63,18 @@ export const useProduct = (slug: string) => {
   return queryResult;
 };
 const fetchRelatedProducts = async (id: string): Promise<Product[]> => {
-  return get(`/api/products/${id}/related`);
+  try {
+    return await get(`/api/products/${id}/related`);
+  } catch (error) {
+    console.error(`Related products fetch error for ID ${id}:`, error);
+    throw error;
+  }
 };
 export const useRelatedProducts = (id: string) => {
   return useQuery<Product[], Error>({
     queryKey: ['related-products', id],
     queryFn: () => fetchRelatedProducts(id),
     enabled: !!id,
-    staleTime: 1000 * 60 * 10, // 10 minutes
+    staleTime: 900000, // 15 minutes
   });
 };

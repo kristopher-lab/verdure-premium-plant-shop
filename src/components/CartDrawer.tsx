@@ -45,10 +45,10 @@ export function CartDrawer() {
             )}
           </Button>
         </SheetTrigger>
-        <SheetContent className="w-full sm:max-w-md flex flex-col" role="dialog" aria-modal="true" aria-labelledby="cart-title">
+        <SheetContent className="w-full sm:max-w-md flex flex-col" role="dialog" aria-modal="true" aria-labelledby="cart-title" aria-describedby="cart-description">
           <SheetHeader>
             <SheetTitle id="cart-title" className="text-2xl font-display">Your Cart</SheetTitle>
-            <SheetDescription>A summary of items in your shopping cart.</SheetDescription>
+            <SheetDescription id="cart-description">A summary of items in your shopping cart.</SheetDescription>
           </SheetHeader>
           <Separator />
           {cart && cart.items.length > 0 ? (
@@ -70,10 +70,10 @@ export function CartDrawer() {
           )}
           <SheetFooter className="mt-auto">
             <div className="w-full space-y-2">
-              <Button size="lg" className="w-full min-h-11" asChild variant="outline" aria-label="View cart details and checkout">
+              <Button size="lg" className="w-full min-h-11 hover:shadow-glow hover:scale-105 transition-all duration-200" asChild variant="outline" aria-label="View cart details and checkout">
                 <Link to="/cart" onClick={() => toggleCart(false)}>View Cart & Checkout</Link>
               </Button>
-              <Button size="lg" className="w-full btn-gradient min-h-11" onClick={handleCheckout} disabled={isCheckingOut || itemCount === 0} aria-label="Proceed to checkout">
+              <Button size="lg" className="w-full btn-gradient min-h-11 hover:shadow-glow hover:scale-105 transition-all duration-200" onClick={handleCheckout} disabled={isCheckingOut || itemCount === 0} aria-label="Proceed to checkout">
                 {isCheckingOut ? 'Processing...' : 'Proceed to Checkout'}
               </Button>
             </div>

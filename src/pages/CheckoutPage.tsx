@@ -90,14 +90,18 @@ export default function CheckoutPage() {
             {isLoading ? (
               <p>Loading cart...</p>
             ) : !cart || cart.items.length === 0 ? (
-              <div className="text-center py-16 border-2 border-dashed rounded-lg">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-center py-16 border-2 border-dashed rounded-lg"
+              >
                 <ShoppingCart className="h-16 w-16 text-muted-foreground/50 mx-auto mb-4" />
                 <p className="text-xl font-semibold">Your cart is empty</p>
                 <p className="text-muted-foreground mt-2">Looks like you haven't added any plants yet.</p>
                 <Button asChild className="mt-6">
                   <Link to="/">Explore Plants</Link>
                 </Button>
-              </div>
+              </motion.div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                 <Card className="lg:col-span-2">
@@ -119,7 +123,7 @@ export default function CheckoutPage() {
                   <CardContent className="space-y-4">
                     <div className="flex items-center gap-2">
                       <Input placeholder="Promo code" value={promoInput} onChange={(e) => setPromoInput(e.target.value)} aria-label="Enter promo code" />
-                      <Button variant="outline" onClick={() => applyPromoCode(promoInput)} aria-label="Apply discount">Apply</Button>
+                      <Button variant="outline" onClick={() => applyPromoCode(promoInput)} aria-label="Apply discount" className="hover:shadow-glow active:scale-95 transition-all duration-200">Apply</Button>
                     </div>
                     <Separator />
                     <div className="space-y-2">

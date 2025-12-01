@@ -32,9 +32,13 @@ function CartItemView({ item }: { item: CartItem }) {
         <p className="text-sm text-muted-foreground">{item.variantName}</p>
         <p className="text-md font-medium mt-1">{formatPrice(item.price)}</p>
         <div className="flex items-center border rounded-md w-fit mt-2">
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity({ itemId: item.id, quantity: item.quantity - 1 })} aria-label={`Decrease quantity of ${item.name}`}>-</Button>
+          <motion.div whileTap={{ scale: 0.95 }}>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity({ itemId: item.id, quantity: item.quantity - 1 })} aria-label={`Decrease quantity of ${item.name}`}>-</Button>
+          </motion.div>
           <span className="w-8 text-center text-sm font-semibold" aria-live="polite">{item.quantity}</span>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity({ itemId: item.id, quantity: item.quantity + 1 })} aria-label={`Increase quantity of ${item.name}`}>+</Button>
+          <motion.div whileTap={{ scale: 0.95 }}>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity({ itemId: item.id, quantity: item.quantity + 1 })} aria-label={`Increase quantity of ${item.name}`}>+</Button>
+          </motion.div>
         </div>
       </div>
       <div className="text-right">
@@ -91,15 +95,15 @@ export default function CartPage() {
             {isLoading ? (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                 <Card className="lg:col-span-2 space-y-4 p-6">
-                  <Skeleton className="h-24 w-full" />
-                  <Skeleton className="h-24 w-full" />
-                  <Skeleton className="h-24 w-full" />
+                  <Skeleton className="h-24 w-full animate-shimmer" />
+                  <Skeleton className="h-24 w-full animate-shimmer" />
+                  <Skeleton className="h-24 w-full animate-shimmer" />
                 </Card>
                 <Card className="sticky top-24 p-6 space-y-4">
-                  <Skeleton className="h-8 w-1/2" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-20 w-full" />
-                  <Skeleton className="h-12 w-full" />
+                  <Skeleton className="h-8 w-1/2 animate-shimmer" />
+                  <Skeleton className="h-10 w-full animate-shimmer" />
+                  <Skeleton className="h-20 w-full animate-shimmer" />
+                  <Skeleton className="h-12 w-full animate-shimmer" />
                 </Card>
               </div>
             ) : !cart || cart.items.length === 0 ? (
