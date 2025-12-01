@@ -24,7 +24,9 @@ export function HomePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   const { addToCart, isAuthenticated, logout } = useCartActions();
-  const { orderId, setOrderId } = useCartUi().actions;
+  const ui = useCartUi();
+  const { orderId } = ui;
+  const { setOrderId } = ui.actions;
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
   const [filters, setFilters] = useState<{ categories: string[], tags: string[], priceRange: [number, number] }>({
     categories: searchParams.getAll('category') || [],
@@ -152,7 +154,7 @@ export function HomePage() {
                       : filteredProducts?.map(product => (
                           <div
                             key={product.id}
-                            onMouseEnter={() => queryClient.prefetchQuery({ queryKey: ['product', product.id] })}
+                            onMouseEnter={() => queryClient.prefetchQuery({ queryKey: ['product', product.slug] })}
                           >
                             <ProductCard
                               product={product}

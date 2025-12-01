@@ -78,15 +78,17 @@ export const useCartMutations = () => {
   const onMutationSuccess = (updatedCart: Cart) => {
     queryClient.setQueryData(['cart', getCartId(), !!getUserId()], updatedCart);
     queryClient.invalidateQueries({ queryKey: ['cart'] });
+    queryClient.invalidateQueries({ queryKey: ['products'] });
   };
   const addToCartMutation = useMutation({
     mutationFn: ({ product, variantSku, quantity }: { product: Product, variantSku: string, quantity: number }) => {
+      const variant = product.variants.find(v => v.sku === variantSku);
+      if (!variant) throw new Error("Variant not found");
+      if (variant.inventory <= 0) throw new Error("Out of stock");
       let cartId = getCartId();
       const userId = getUserId();
       if (userId) cartId = userId;
       if (!cartId) throw new Error("Cart not initialized");
-      const variant = product.variants.find(v => v.sku === variantSku);
-      if (!variant) throw new Error("Variant not found");
       const cartItem: Omit<CartItem, 'id'> = {
         productId: product.id, name: product.name, image: product.images[0],
         price: variant.price, quantity, variantName: variant.name,
@@ -98,7 +100,13 @@ export const useCartMutations = () => {
       toast.success(`${updatedCart.items[updatedCart.items.length - 1].name} added to cart!`);
       toggleCart(true);
     },
-    onError: () => toast.error("Failed to add item to cart."),
+    onError: (error: Error) => {
+      if (error.message === 'Out of stock') {
+        toast.error("Item is out of stock.");
+      } else {
+        toast.error("Failed to add item to cart.");
+      }
+    },
   });
   const updateQuantityMutation = useMutation({
     mutationFn: ({ itemId, quantity }: { itemId: string, quantity: number }) => {

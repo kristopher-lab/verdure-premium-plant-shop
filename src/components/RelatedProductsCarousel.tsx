@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRelatedProducts } from '@/hooks/use-products';
-import { Badge } from './ui/badge';
 type RelatedProductsCarouselProps = {
   productId: string;
 };
@@ -32,7 +31,7 @@ export function RelatedProductsCarousel({ productId }: RelatedProductsCarouselPr
     );
   }
   if (!products || products.length === 0) {
-    return null;
+    return <div className="text-center text-muted-foreground py-8">No related items found.</div>;
   }
   return (
     <div className="overflow-hidden" ref={emblaRef}>
@@ -43,9 +42,9 @@ export function RelatedProductsCarousel({ productId }: RelatedProductsCarouselPr
             className="flex-shrink-0 flex-grow-0 basis-1/2 md:basis-1/3 lg:basis-1/4"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
+            transition={{ duration: 0.3, delay: index * 0.1 }}
           >
-            <Link to={`/products/${product.slug}`} className="block group">
+            <Link to={`/products/${product.slug}`} className="block group" aria-label={`View details for ${product.name}`}>
               <Card className="overflow-hidden h-full transition-all duration-300 ease-in-out hover:shadow-lg hover:-translate-y-1">
                 <CardHeader className="p-0 border-b">
                   <div className="overflow-hidden aspect-square relative">
@@ -53,6 +52,7 @@ export function RelatedProductsCarousel({ productId }: RelatedProductsCarouselPr
                       src={product.images[0]}
                       alt={product.name}
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      loading="lazy"
                     />
                   </div>
                 </CardHeader>

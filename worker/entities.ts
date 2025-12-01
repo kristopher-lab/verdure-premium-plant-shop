@@ -108,6 +108,14 @@ export class OrderEntity extends IndexedEntity<Order> {
     customer: { name: "Guest", email: "guest@example.com" },
     createdAt: 0,
   };
+  static seedData = [
+    { id: 'ord_001', cartId: 'cart1', items: [{ id: 'MD-S-01', productId: 'prod_01', name: 'Monstera Deliciosa', image: '', price: 3500, quantity: 1 }], total: 3500, customer: {name: 'John Doe', email: 'j@example.com'}, createdAt: Date.now() - 86400000*65 },
+    { id: 'ord_002', cartId: 'cart2', items: [{ id: 'SP-S-02', productId: 'prod_02', name: 'Snake Plant', image: '', price: 2800, quantity: 2 }], total: 5600, customer: {name: 'Jane Smith', email: 'jane@example.com'}, createdAt: Date.now() - 86400000*50 },
+    { id: 'ord_003', cartId: 'cart3', items: [{ id: 'FLF-M-03', productId: 'prod_03', name: 'Fiddle Leaf Fig', image: '', price: 7500, quantity: 1 }], total: 7500, customer: {name: 'Peter Jones', email: 'peter@example.com'}, createdAt: Date.now() - 86400000*40 },
+    { id: 'ord_004', cartId: 'cart4', items: [{ id: 'ECH-S-04', productId: 'prod_04', name: 'Echeveria "Lola"', image: '', price: 1200, quantity: 3 }], total: 3600, customer: {name: 'Mary Williams', email: 'mary@example.com'}, createdAt: Date.now() - 86400000*25 },
+    { id: 'ord_005', cartId: 'cart5', items: [{ id: 'PQ-M-05', productId: 'prod_05', name: 'Pothos "Marble Queen"', image: '', price: 2200, quantity: 1 }], total: 2200, customer: {name: 'David Brown', email: 'd@example.com'}, createdAt: Date.now() - 86400000*10 },
+    { id: 'ord_006', cartId: 'cart6', items: [{ id: 'BOP-L-06', productId: 'prod_06', name: 'Bird of Paradise', image: '', price: 8500, quantity: 1 }], total: 8500, customer: {name: 'John Doe', email: 'j@example.com'}, createdAt: Date.now() - 86400000*5 },
+  ];
 }
 // USER ENTITY
 export class UserEntity extends IndexedEntity<User> {

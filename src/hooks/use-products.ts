@@ -8,7 +8,7 @@ type ProductFilters = {
   priceRange?: [number, number];
 };
 const fetchProducts = async (): Promise<{ items: Product[], next: string | null }> => {
-  return get('/api/products');
+  return get('/api/products?limit=20');
 };
 export const useProducts = (filters: ProductFilters) => {
   return useQuery({
@@ -24,14 +24,15 @@ export const useProducts = (filters: ProductFilters) => {
     }
   });
 };
-const fetchProduct = async (id: string): Promise<Product> => {
-  return get(`/api/products/${id}`);
+const fetchProductBySlug = async (slug: string): Promise<Product> => {
+  return get(`/api/products/slug/${slug}`);
 };
-export const useProduct = (id: string) => {
+export const useProduct = (slug: string) => {
   return useQuery({
-    queryKey: ['product', id],
-    queryFn: () => fetchProduct(id),
-    enabled: !!id,
+    queryKey: ['product', slug],
+    queryFn: () => fetchProductBySlug(slug),
+    enabled: !!slug,
+    staleTime: 1000 * 60 * 10, // 10 minutes
   });
 };
 const fetchRelatedProducts = async (id: string): Promise<Product[]> => {

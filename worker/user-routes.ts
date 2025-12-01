@@ -28,7 +28,7 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
   app.get('/api/products', async (c) => {
     const cq = c.req.query('cursor');
     const lq = c.req.query('limit');
-    const page = await ProductEntity.list(c.env, cq ?? null, lq ? Math.max(1, (Number(lq) | 0)) : 12);
+    const page = await ProductEntity.list(c.env, cq ?? null, lq ? Math.max(1, (Number(lq) | 0)) : 20);
     return ok(c, page);
   });
   app.get('/api/products/:id', async (c) => {
@@ -36,6 +36,15 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const product = new ProductEntity(c.env, id);
     if (!await product.exists()) return notFound(c, 'Product not found');
     return ok(c, await product.getState());
+  });
+  app.get('/api/products/slug/:slug', async (c) => {
+    const { slug } = c.req.param();
+    if (!isStr(slug)) return bad(c, 'Invalid slug');
+    await ProductEntity.ensureSeed(c.env);
+    const { items: products } = await ProductEntity.list(c.env);
+    const product = products.find(p => p.slug === slug);
+    if (!product) return notFound(c, 'Product not found');
+    return ok(c, product);
   });
   app.get('/api/products/:id/related', async (c) => {
     const { id } = c.req.param();
@@ -159,5 +168,11 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     await OrderEntity.create(c.env, newOrder);
     await cart.clear();
     return ok(c, { orderId, message: 'Checkout successful!' });
+  });
+  // ORDERS (for demo dashboard)
+  app.get('/api/orders', async (c) => {
+    await OrderEntity.ensureSeed(c.env);
+    const { items } = await OrderEntity.list(c.env);
+    return ok(c, items);
   });
 }

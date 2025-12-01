@@ -1,11 +1,12 @@
-import { useState } from 'react';
-import { X, Minus, Plus } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Minus, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import type { Product } from '@shared/types';
+import { toast } from 'sonner';
 type ProductQuickViewProps = {
   product: Product | null;
   isOpen: boolean;
@@ -13,23 +14,34 @@ type ProductQuickViewProps = {
   onAddToCart: (product: Product, variantSku: string, quantity: number) => void;
 };
 export function ProductQuickView({ product, isOpen, onOpenChange, onAddToCart }: ProductQuickViewProps) {
-  const [selectedVariantSku, setSelectedVariantSku] = useState<string | undefined>(product?.variants[0]?.sku);
+  const [selectedVariantSku, setSelectedVariantSku] = useState<string | undefined>(undefined);
   const [quantity, setQuantity] = useState(1);
+  useEffect(() => {
+    if (product) {
+      setSelectedVariantSku(product.variants[0]?.sku);
+      setQuantity(1);
+    }
+  }, [product]);
   if (!product) return null;
   const selectedVariant = product.variants.find(v => v.sku === selectedVariantSku);
-  const formatPrice = (price: number) => `$${(price / 100).toFixed(2)}`;
+  const formatPrice = (price: number) => `${(price / 100).toFixed(2)}`;
   const handleAddToCart = () => {
+    if (selectedVariant?.inventory <= 0) {
+      toast.error('This variant is out of stock');
+      return;
+    }
     if (selectedVariantSku) {
       onAddToCart(product, selectedVariantSku, quantity);
       onOpenChange(false);
     }
   };
+  const isOutOfStock = !selectedVariant || selectedVariant.inventory <= 0;
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[800px] p-0">
         <div className="grid grid-cols-1 md:grid-cols-2">
           <div className="p-2">
-            <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover rounded-lg aspect-square" />
+            <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover rounded-lg aspect-square" loading="lazy" />
           </div>
           <div className="p-6 flex flex-col">
             <DialogHeader>
@@ -46,15 +58,18 @@ export function ProductQuickView({ product, isOpen, onOpenChange, onAddToCart }:
                   value={selectedVariantSku}
                   onValueChange={setSelectedVariantSku}
                   className="flex gap-2 mt-2"
+                  aria-label="Select product size"
                 >
                   {product.variants.map(variant => (
                     <div key={variant.sku}>
-                      <RadioGroupItem value={variant.sku} id={variant.sku} className="sr-only" />
+                      <RadioGroupItem value={variant.sku} id={`quickview-${variant.sku}`} className="sr-only" />
                       <Label
-                        htmlFor={variant.sku}
+                        htmlFor={`quickview-${variant.sku}`}
                         className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary"
+                        aria-describedby={`variant-stock-status-${variant.sku}`}
                       >
                         {variant.name}
+                        {variant.inventory <= 0 && <Badge variant="destructive" className="ml-2 mt-1">Out of Stock</Badge>}
                       </Label>
                     </div>
                   ))}
@@ -73,8 +88,8 @@ export function ProductQuickView({ product, isOpen, onOpenChange, onAddToCart }:
                 </div>
               </div>
             </div>
-            <Button size="lg" className="w-full mt-6" onClick={handleAddToCart} disabled={!selectedVariantSku}>
-              Add to Cart
+            <Button size="lg" className="w-full mt-6" onClick={handleAddToCart} disabled={isOutOfStock}>
+              {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
             </Button>
           </div>
         </div>
