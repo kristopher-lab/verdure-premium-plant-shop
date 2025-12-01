@@ -134,12 +134,18 @@ export const useCartMutations = () => {
     onError: () => toast.error("Failed to remove item from cart."),
   });
   const checkoutMutation = useMutation({
-    mutationFn: () => {
+    mutationFn: ({ guestInfo }: { guestInfo?: { name: string; email: string } } = {}) => {
       const userId = getUserId();
       let cartId = getCartId();
       if (userId) cartId = userId;
-      if (!cartId || !userId) throw new Error("User not logged in or cart not found");
-      return post<{ orderId: string }>(`/api/checkout`, { cartId, userId });
+      if (!cartId) throw new Error("Cart not initialized");
+      if (!userId && !guestInfo) throw new Error("Guest details are required for checkout.");
+      const payload = {
+        cartId,
+        userId: userId || null,
+        ...guestInfo,
+      };
+      return post<{ orderId: string }>(`/api/checkout`, payload);
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['cart'] });
@@ -153,6 +159,7 @@ export const useCartMutations = () => {
     updateQuantity: updateQuantityMutation.mutate,
     removeFromCart: removeFromCartMutation.mutate,
     checkout: checkoutMutation.mutate,
+    isCheckingOut: checkoutMutation.isPending,
   };
 };
 export const useCartActions = () => {

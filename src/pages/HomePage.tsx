@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Leaf, User, LogOut } from 'lucide-react';
@@ -18,45 +18,44 @@ import { Slider } from '@/components/ui/slider';
 import { OrderConfirmation } from '@/components/OrderConfirmation';
 const categories = ['Indoor', 'Outdoor', 'Succulents', 'Cacti'];
 const tags = ['Full Sun', 'Partial Shade', 'Low Light', 'Pet-Friendly', 'Air Purifying'];
-export function HomePage() {
+type SearchParamsWrapperProps = {
+  setQuickViewProduct: (product: Product | null) => void;
+  handleAddToCart: (product: Product, variantSku: string, quantity: number) => void;
+};
+function SearchParamsWrapper({ setQuickViewProduct, handleAddToCart }: SearchParamsWrapperProps) {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
-  const { addToCart, isAuthenticated, logout } = useCartActions();
-  const ui = useCartUi();
-  const { orderId } = ui;
-  const { setOrderId } = ui.actions;
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
   const [filters, setFilters] = useState<{ categories: string[], tags: string[], priceRange: [number, number] }>({
     categories: searchParams.getAll('category') || [],
     tags: searchParams.getAll('tag') || [],
     priceRange: [Number(searchParams.get('minPrice') || 0), Number(searchParams.get('maxPrice') || 200)],
   });
+  const memoizedFilters = useMemo(() => filters, [filters]);
   const { data: filteredProducts, isLoading } = useProducts({
     searchTerm,
-    categories: filters.categories,
-    tags: filters.tags,
-    priceRange: filters.priceRange,
+    categories: memoizedFilters.categories,
+    tags: memoizedFilters.tags,
+    priceRange: memoizedFilters.priceRange,
   });
   const handleFilterChange = (type: 'categories' | 'tags', value: string) => {
     setFilters(prev => {
       const current = prev[type];
       const next = current.includes(value) ? current.filter(item => item !== value) : [...current, value];
       const newParams = new URLSearchParams(searchParams);
-      newParams.delete(type === 'categories' ? 'category' : 'tag');
-      next.forEach(item => newParams.append(type === 'categories' ? 'category' : 'tag', item));
-      setSearchParams(newParams);
+      const paramKey = type === 'categories' ? 'category' : 'tag';
+      newParams.delete(paramKey);
+      next.forEach(item => newParams.append(paramKey, item));
+      setSearchParams(newParams, { replace: true });
       return { ...prev, [type]: next };
     });
   };
   const handlePriceChange = (value: number[]) => {
-    setFilters(prev => ({ ...prev, priceRange: [value[0], value[1]] }));
+    const newPriceRange: [number, number] = [value[0], value[1]];
+    setFilters(prev => ({ ...prev, priceRange: newPriceRange }));
     const newParams = new URLSearchParams(searchParams);
-    newParams.set('minPrice', String(value[0]));
-    newParams.set('maxPrice', String(value[1]));
-    setSearchParams(newParams);
-  };
-  const handleAddToCart = (product: Product, variantSku: string, quantity: number) => {
-    addToCart({ product, variantSku, quantity });
+    newParams.set('minPrice', String(newPriceRange[0]));
+    newParams.set('maxPrice', String(newPriceRange[1]));
+    setSearchParams(newParams, { replace: true });
   };
   const FilterSidebar = () => (
     <aside className="lg:col-span-3 space-y-6">
@@ -98,13 +97,56 @@ export function HomePage() {
     </aside>
   );
   return (
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <FilterSidebar />
+      <div className="lg:col-span-9">
+        <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4">
+          <div className="relative w-full sm:max-w-xs">
+            <Input placeholder="Search plants..." className="pl-10" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+          </div>
+          <p className="text-sm text-muted-foreground">{filteredProducts?.length ?? 0} products found</p>
+        </div>
+        <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
+          <AnimatePresence>
+            {isLoading
+              ? Array.from({ length: 9 }).map((_, i) => <ProductCardSkeleton key={i} />)
+              : filteredProducts?.map(product => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    onAddToCart={(prod, sku) => handleAddToCart(prod, sku, 1)}
+                    onQuickView={setQuickViewProduct}
+                  />
+                ))}
+          </AnimatePresence>
+        </motion.div>
+        {!isLoading && filteredProducts?.length === 0 && (
+            <div className="text-center py-16 col-span-full">
+                <p className="text-lg font-semibold">No plants match your criteria.</p>
+                <p className="text-muted-foreground">Try adjusting your filters.</p>
+            </div>
+        )}
+      </div>
+    </div>
+  );
+}
+export function HomePage() {
+  const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
+  const { addToCart, isAuthenticated, logout } = useCartActions();
+  const { orderId, actions } = useCartUi();
+  const { setOrderId } = actions;
+  const handleAddToCart = (product: Product, variantSku: string, quantity: number) => {
+    addToCart({ product, variantSku, quantity });
+  };
+  return (
     <div className="bg-background min-h-screen">
       <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-          <div className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2">
             <Leaf className="h-8 w-8 text-primary" />
             <h1 className="text-2xl font-bold font-display text-primary">Verdure</h1>
-          </div>
+          </Link>
           <div className="flex items-center gap-2">
             {isAuthenticated ? (
               <Button variant="ghost" onClick={logout}><LogOut className="h-4 w-4 mr-2" /> Logout</Button>
@@ -135,41 +177,10 @@ export function HomePage() {
         </section>
         <div id="product-grid" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="py-8 md:py-10 lg:py-12">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              <FilterSidebar />
-              <div className="lg:col-span-9">
-                <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4">
-                  <div className="relative w-full sm:max-w-xs">
-                    <Input placeholder="Search plants..." className="pl-10" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <p className="text-sm text-muted-foreground">{filteredProducts?.length ?? 0} products found</p>
-                </div>
-                <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
-                  <AnimatePresence>
-                    {isLoading
-                      ? Array.from({ length: 9 }).map((_, i) => <ProductCardSkeleton key={i} />)
-                      : filteredProducts?.map(product => (
-                          <div
-                            key={product.id}
-                          >
-                            <ProductCard
-                              product={product}
-                              onAddToCart={(prod, sku) => handleAddToCart(prod, sku, 1)}
-                              onQuickView={setQuickViewProduct}
-                            />
-                          </div>
-                        ))}
-                  </AnimatePresence>
-                </motion.div>
-                {!isLoading && filteredProducts?.length === 0 && (
-                    <div className="text-center py-16 col-span-full">
-                        <p className="text-lg font-semibold">No plants match your criteria.</p>
-                        <p className="text-muted-foreground">Try adjusting your filters.</p>
-                    </div>
-                )}
-              </div>
-            </div>
+            <SearchParamsWrapper 
+              setQuickViewProduct={setQuickViewProduct}
+              handleAddToCart={handleAddToCart}
+            />
           </div>
         </div>
       </main>

@@ -144,25 +144,32 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const updatedCart = await cart.removeItem(itemId);
     return ok(c, updatedCart);
   });
-  // MOCK CHECKOUT
+  // CHECKOUT (GUEST OR AUTH)
   app.post('/api/checkout', async (c) => {
-    const { cartId, userId } = (await c.req.json()) as { cartId?: string, userId?: string };
+    const { cartId, userId, name, email } = (await c.req.json()) as { cartId: string, userId?: string | null, name?: string, email?: string };
     if (!isStr(cartId)) return bad(c, 'cartId is required');
-    if (!isStr(userId) || !(await new UserEntity(c.env, userId).exists())) {
-      return bad(c, 'User authentication required');
-    }
     const cart = new CartEntity(c.env, cartId);
     if (!await cart.exists()) return notFound(c, 'Cart not found');
     const cartState = await cart.getState();
     if (cartState.items.length === 0) return bad(c, 'Cannot checkout with an empty cart');
-    const user = await new UserEntity(c.env, userId).getState();
+    let customer: { name: string; email: string };
+    if (userId && isStr(userId)) {
+      const userEntity = new UserEntity(c.env, userId);
+      if (!await userEntity.exists()) return bad(c, 'User not found');
+      const user = await userEntity.getState();
+      customer = { name: user.name || "Authenticated User", email: user.email };
+    } else if (isStr(name) && isStr(email)) {
+      customer = { name, email };
+    } else {
+      return bad(c, 'Authentication or guest details are required');
+    }
     const orderId = `ord_${crypto.randomUUID().slice(0, 8)}`;
     const newOrder: Order = {
       id: orderId,
       cartId: cartState.id,
       items: cartState.items,
       total: cartState.subtotal,
-      customer: { name: user.name || "Guest User", email: user.email },
+      customer,
       createdAt: Date.now(),
     };
     await OrderEntity.create(c.env, newOrder);
