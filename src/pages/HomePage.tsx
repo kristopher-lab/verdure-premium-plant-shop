@@ -16,11 +16,9 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
 import { OrderConfirmation } from '@/components/OrderConfirmation';
-import { useQueryClient } from '@tanstack/react-query';
 const categories = ['Indoor', 'Outdoor', 'Succulents', 'Cacti'];
 const tags = ['Full Sun', 'Partial Shade', 'Low Light', 'Pet-Friendly', 'Air Purifying'];
 export function HomePage() {
-  const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   const { addToCart, isAuthenticated, logout } = useCartActions();
@@ -154,7 +152,6 @@ export function HomePage() {
                       : filteredProducts?.map(product => (
                           <div
                             key={product.id}
-                            onMouseEnter={() => queryClient.prefetchQuery({ queryKey: ['product', product.slug] })}
                           >
                             <ProductCard
                               product={product}
