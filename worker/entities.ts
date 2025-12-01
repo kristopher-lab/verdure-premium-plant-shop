@@ -1,5 +1,5 @@
 import { IndexedEntity } from "./core-utils";
-import type { Product, Cart, CartItem } from "@shared/types";
+import type { Product, Cart, CartItem, Order } from "@shared/types";
 import { MOCK_PRODUCTS } from "@shared/mock-data";
 // PRODUCT ENTITY
 export class ProductEntity extends IndexedEntity<Product> {
@@ -94,4 +94,17 @@ export class CartEntity extends IndexedEntity<Cart> {
       updatedAt: Date.now(),
     }));
   }
+}
+// ORDER ENTITY
+export class OrderEntity extends IndexedEntity<Order> {
+  static readonly entityName = "order";
+  static readonly indexName = "orders";
+  static readonly initialState: Order = {
+    id: "",
+    cartId: "",
+    items: [],
+    total: 0,
+    customer: { name: "Guest", email: "guest@example.com" },
+    createdAt: 0,
+  };
 }

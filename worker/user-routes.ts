@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 import type { Env } from './core-utils';
-import { ProductEntity, CartEntity } from "./entities";
+import { ProductEntity, CartEntity, OrderEntity } from "./entities";
 import { ok, bad, notFound, isStr } from './core-utils';
-import type { CartItem, Product } from "@shared/types";
+import type { CartItem, Product, Order } from "@shared/types";
 export function userRoutes(app: Hono<{ Bindings: Env }>) {
   // Ensure products are seeded on first request
   app.use('/api/products/*', async (c, next) => {
@@ -21,6 +21,17 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     const product = new ProductEntity(c.env, id);
     if (!await product.exists()) return notFound(c, 'Product not found');
     return ok(c, await product.getState());
+  });
+  app.get('/api/products/:id/related', async (c) => {
+    const { id } = c.req.param();
+    const productEntity = new ProductEntity(c.env, id);
+    if (!await productEntity.exists()) return notFound(c, 'Product not found');
+    const product = await productEntity.getState();
+    const { items: allProducts } = await ProductEntity.list(c.env, null, 100); // Fetch all for simple filtering
+    const related = allProducts
+      .filter(p => p.id !== id && p.category === product.category)
+      .slice(0, 4);
+    return ok(c, related);
   });
   // CART
   app.post('/api/cart', async (c) => {
@@ -85,9 +96,19 @@ export function userRoutes(app: Hono<{ Bindings: Env }>) {
     if (!isStr(cartId)) return bad(c, 'cartId is required');
     const cart = new CartEntity(c.env, cartId);
     if (!await cart.exists()) return notFound(c, 'Cart not found');
-    // In a real app, you'd create an order, process payment, etc.
-    // Here we just clear the cart and return a mock order ID.
+    const cartState = await cart.getState();
+    if (cartState.items.length === 0) return bad(c, 'Cannot checkout with an empty cart');
+    const orderId = `ord_${crypto.randomUUID()}`;
+    const newOrder: Order = {
+      id: orderId,
+      cartId: cartState.id,
+      items: cartState.items,
+      total: cartState.subtotal,
+      customer: { name: "Guest User", email: "guest@verdure.com" },
+      createdAt: Date.now(),
+    };
+    await OrderEntity.create(c.env, newOrder);
     await cart.clear();
-    return ok(c, { orderId: `mock_order_${crypto.randomUUID()}`, message: 'Checkout successful!' });
+    return ok(c, { orderId, message: 'Checkout successful!' });
   });
 }

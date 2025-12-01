@@ -1,49 +1,42 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutGrid, List, Search, SlidersHorizontal, Leaf } from 'lucide-react';
+import { Search, Leaf } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { Toaster, toast } from 'sonner';
-import { get } from '@/lib/api-client';
+import { Toaster } from 'sonner';
 import type { Product } from '@shared/types';
 import { ProductCard, ProductCardSkeleton } from '@/components/ProductCard';
 import { ProductQuickView } from '@/components/ProductQuickView';
 import { CartDrawer } from '@/components/CartDrawer';
-import { useCartActions } from '@/hooks/use-cart';
+import { useCartMutations } from '@/hooks/use-cart';
+import { useProducts } from '@/hooks/use-products';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
-import { Label } from '@/components/ui/label';
+import { OrderConfirmation } from '@/components/OrderConfirmation';
+import { useCartUi, useCartUiActions } from '@/hooks/use-cart';
 const categories = ['Indoor', 'Outdoor', 'Succulents', 'Cacti'];
 const tags = ['Full Sun', 'Partial Shade', 'Low Light', 'Pet-Friendly', 'Air Purifying'];
 export function HomePage() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
-  const { initCart, addToCart } = useCartActions();
+  const { addToCart } = useCartMutations();
+  const { orderId } = useCartUi();
+  const { setOrderId } = useCartUiActions();
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState<{ categories: string[], tags: string[], priceRange: [number, number] }>({
     categories: [],
     tags: [],
     priceRange: [0, 200],
   });
-  useEffect(() => {
-    initCart();
-    const fetchProducts = async () => {
-      setIsLoading(true);
-      try {
-        const { items } = await get<{ items: Product[] }>('/api/products');
-        setProducts(items);
-      } catch (error) {
-        toast.error('Failed to fetch products.');
-        console.error(error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchProducts();
-  }, [initCart]);
+  const { data: filteredProducts, isLoading } = useProducts({
+    searchTerm,
+    categories: filters.categories,
+    tags: filters.tags,
+    priceRange: filters.priceRange,
+  });
   const handleFilterChange = (type: 'categories' | 'tags', value: string) => {
     setFilters(prev => {
       const current = prev[type];
@@ -54,18 +47,8 @@ export function HomePage() {
   const handlePriceChange = (value: number[]) => {
     setFilters(prev => ({ ...prev, priceRange: [value[0], value[1]] }));
   };
-  const filteredProducts = useMemo(() => {
-    return products
-      .filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()))
-      .filter(p => filters.categories.length === 0 || filters.categories.includes(p.category))
-      .filter(p => filters.tags.length === 0 || filters.tags.some(tag => p.tags.includes(tag as any)))
-      .filter(p => (p.price / 100) >= filters.priceRange[0] && (p.price / 100) <= filters.priceRange[1]);
-  }, [products, searchTerm, filters]);
-  const handleAddToCart = (productId: string, variantSku: string) => {
-    const product = products.find(p => p.id === productId);
-    if (product) {
-      addToCart(product, variantSku, 1);
-    }
+  const handleAddToCart = (product: Product, variantSku: string, quantity: number) => {
+    addToCart({ product, variantSku, quantity });
   };
   const FilterSidebar = () => (
     <aside className="lg:col-span-3 space-y-6">
@@ -85,12 +68,7 @@ export function HomePage() {
         <AccordionItem value="price">
           <AccordionTrigger className="text-lg">Price Range</AccordionTrigger>
           <AccordionContent className="pt-4">
-            <Slider
-              defaultValue={[0, 200]}
-              max={200}
-              step={10}
-              onValueCommit={handlePriceChange}
-            />
+            <Slider defaultValue={[0, 200]} max={200} step={10} onValueCommit={handlePriceChange} />
             <div className="flex justify-between text-sm text-muted-foreground mt-2">
               <span>${filters.priceRange[0]}</span>
               <span>${filters.priceRange[1]}</span>
@@ -126,39 +104,22 @@ export function HomePage() {
         </div>
       </header>
       <main>
-        {/* Hero Section */}
         <section className="relative py-20 md:py-32 bg-secondary/50">
           <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1501004318641-b39e6451bec6?q=80&w=1973')] bg-cover bg-center opacity-20"></div>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="text-5xl md:text-7xl font-display font-bold text-balance leading-tight"
-            >
+            <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="text-5xl md:text-7xl font-display font-bold text-balance leading-tight">
               Bring Nature <span className="text-gradient">Indoors</span>
             </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="mt-4 text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto text-pretty"
-            >
+            <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="mt-4 text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto text-pretty">
               Discover premium houseplants and accessories to transform your space into a green sanctuary.
             </motion.p>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="mt-8"
-            >
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="mt-8">
               <Button size="lg" className="btn-gradient" onClick={() => document.getElementById('product-grid')?.scrollIntoView({ behavior: 'smooth' })}>
                 Shop All Plants
               </Button>
             </motion.div>
           </div>
         </section>
-        {/* Main Content */}
         <div id="product-grid" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="py-8 md:py-10 lg:py-12">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -169,24 +130,24 @@ export function HomePage() {
                     <Input placeholder="Search plants..." className="pl-10" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                   </div>
-                  <p className="text-sm text-muted-foreground">{filteredProducts.length} products found</p>
+                  <p className="text-sm text-muted-foreground">{filteredProducts?.length ?? 0} products found</p>
                 </div>
                 <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
                   <AnimatePresence>
                     {isLoading
                       ? Array.from({ length: 9 }).map((_, i) => <ProductCardSkeleton key={i} />)
-                      : filteredProducts.map(product => (
+                      : filteredProducts?.map(product => (
                           <ProductCard
                             key={product.id}
                             product={product}
-                            onAddToCart={(productId, variantSku) => handleAddToCart(productId, variantSku)}
+                            onAddToCart={(prod, sku) => handleAddToCart(prod, sku, 1)}
                             onQuickView={setQuickViewProduct}
                           />
                         ))}
                   </AnimatePresence>
                 </motion.div>
-                {!isLoading && filteredProducts.length === 0 && (
-                    <div className="text-center py-16">
+                {!isLoading && filteredProducts?.length === 0 && (
+                    <div className="text-center py-16 col-span-full">
                         <p className="text-lg font-semibold">No plants match your criteria.</p>
                         <p className="text-muted-foreground">Try adjusting your filters.</p>
                     </div>
@@ -205,7 +166,12 @@ export function HomePage() {
         product={quickViewProduct}
         isOpen={!!quickViewProduct}
         onOpenChange={(isOpen) => !isOpen && setQuickViewProduct(null)}
-        onAddToCart={addToCart}
+        onAddToCart={handleAddToCart}
+      />
+      <OrderConfirmation
+        orderId={orderId}
+        isOpen={!!orderId}
+        onOpenChange={() => setOrderId(null)}
       />
       <Toaster richColors closeButton />
     </div>
