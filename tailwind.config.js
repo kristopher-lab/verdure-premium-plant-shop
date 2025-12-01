@@ -109,7 +109,7 @@ export default {
   		},
   		boxShadow: {
   			soft: '0 2px 15px -3px rgba(0, 0, 0, 0.07), 0 10px 20px -2px rgba(0, 0, 0, 0.04)',
-  			glow: '0 0 20px -5px rgba(39, 83, 42, 0.4)',
+  			glow: '0 0 20px -5px rgba(39, 83, 42, 0.3)',
   			'glow-lg': '0 0 40px -10px rgba(39, 83, 42, 0.3)',
   			primary: '0 0 20px -5px hsl(var(--primary) / 0.4)',
   			glass: '0 8px 32px 0 rgba(31, 38, 135, 0.37)'
@@ -132,8 +132,8 @@ export default {
   				'100%': { transform: 'translateX(100%)' }
   			},
   			glow: {
-  				'0%, 100%': { boxShadow: '0 0 20px -5px rgba(39, 83, 42, 0.4)' },
-  				'50%': { boxShadow: '0 0 40px -5px rgba(39, 83, 42, 0.6)' }
+  				'0%, 100%': { boxShadow: '0 0 20px -5px rgba(39, 83, 42, 0.3)' },
+  				'50%': { boxShadow: '0 0 35px -5px rgba(39, 83, 42, 0.5)' }
   			},
   			float: {
   				'0%, 100%': { transform: 'translateY(0px)' },
@@ -154,7 +154,8 @@ export default {
   			'scale-in': 'scale-in 0.3s ease-out',
   			shimmer: 'shimmer 2s infinite',
   			glow: 'glow 2s ease-in-out infinite',
-  			float: 'float 3s ease-in-out infinite',
+            'button-glow': 'glow 1.5s ease-in-out infinite alternate',
+  			float: 'float 8s ease-in-out infinite',
   			'accordion-down': 'accordion-down 0.2s ease-out',
   			'accordion-up': 'accordion-up 0.2s ease-out'
   		},

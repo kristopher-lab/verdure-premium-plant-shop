@@ -107,7 +107,21 @@ function SearchParamsWrapper({ setQuickViewProduct, handleAddToCart }: SearchPar
           </div>
           <p className="text-sm text-muted-foreground">{filteredProducts?.length ?? 0} products found</p>
         </div>
-        <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
+        <motion.div 
+          layout 
+          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8"
+          variants={{
+            hidden: { opacity: 0 },
+            show: {
+              opacity: 1,
+              transition: {
+                staggerChildren: 0.1,
+              },
+            },
+          }}
+          initial="hidden"
+          animate="show"
+        >
           <AnimatePresence>
             {isLoading
               ? Array.from({ length: 9 }).map((_, i) => <ProductCardSkeleton key={i} />)
@@ -141,6 +155,7 @@ export function HomePage() {
   };
   return (
     <div className="bg-background min-h-screen">
+      <a href="#product-grid" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-background focus:text-foreground">Skip to main content</a>
       <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-2">
@@ -159,8 +174,12 @@ export function HomePage() {
         </div>
       </header>
       <main>
-        <section className="relative py-20 md:py-32 bg-secondary/50">
-          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1501004318641-b39e6451bec6?q=80&w=1973')] bg-cover bg-center opacity-20"></div>
+        <section className="relative py-20 md:py-32 bg-secondary/50 overflow-hidden">
+          <motion.div 
+            className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1501004318641-b39e6451bec6?q=80&w=1973')] bg-cover bg-center opacity-20"
+            animate={{ y: [0, -10, 0] }}
+            transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          ></motion.div>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
             <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="text-5xl md:text-7xl font-display font-bold text-balance leading-tight">
               Bring Nature <span className="text-gradient">Indoors</span>
@@ -177,7 +196,7 @@ export function HomePage() {
         </section>
         <div id="product-grid" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="py-8 md:py-10 lg:py-12">
-            <SearchParamsWrapper 
+            <SearchParamsWrapper
               setQuickViewProduct={setQuickViewProduct}
               handleAddToCart={handleAddToCart}
             />

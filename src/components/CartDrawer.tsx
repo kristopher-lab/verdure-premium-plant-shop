@@ -10,7 +10,8 @@ import { toast } from 'sonner';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { GuestCheckoutModal } from './GuestCheckoutModal';
-const formatPrice = (price: number) => `$${(price / 100).toFixed(2)}`;
+import { motion } from 'framer-motion';
+const formatPrice = (price: number) => `${(price / 100).toFixed(2)}`;
 function CartItemView({ item }: { item: CartItem }) {
   const { updateQuantity, removeFromCart } = useCartActions();
   return (
@@ -23,11 +24,11 @@ function CartItemView({ item }: { item: CartItem }) {
       </div>
       <div className="flex flex-col items-end gap-2">
         <div className="flex items-center border rounded-md">
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity({ itemId: item.id, quantity: item.quantity - 1 })}>-</Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity({ itemId: item.id, quantity: item.quantity - 1 })} aria-label="Decrease quantity">-</Button>
           <span className="w-8 text-center text-sm">{item.quantity}</span>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity({ itemId: item.id, quantity: item.quantity + 1 })}>+</Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity({ itemId: item.id, quantity: item.quantity + 1 })} aria-label="Increase quantity">+</Button>
         </div>
-        <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive" onClick={() => removeFromCart(item.id)}>
+        <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive" onClick={() => removeFromCart(item.id)} aria-label={`Remove ${item.name} from cart`}>
           <Trash2 className="h-4 w-4 mr-1" /> Remove
         </Button>
       </div>
@@ -63,7 +64,7 @@ export function CartDrawer() {
     <>
       <Sheet open={isCartOpen} onOpenChange={toggleCart}>
         <SheetTrigger asChild>
-          <Button variant="outline" size="icon" className="relative">
+          <Button variant="outline" size="icon" className="relative" aria-label={`Open cart, ${itemCount} items`}>
             <ShoppingCart className="h-5 w-5" />
             {itemCount > 0 && (
               <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
@@ -72,9 +73,9 @@ export function CartDrawer() {
             )}
           </Button>
         </SheetTrigger>
-        <SheetContent className="w-full sm:max-w-md flex flex-col">
+        <SheetContent className="w-full sm:max-w-md flex flex-col" role="dialog" aria-modal="true" aria-labelledby="cart-title">
           <SheetHeader>
-            <SheetTitle className="text-2xl font-display">Your Cart</SheetTitle>
+            <SheetTitle id="cart-title" className="text-2xl font-display">Your Cart</SheetTitle>
           </SheetHeader>
           <Separator />
           {cart && cart.items.length > 0 ? (
@@ -84,18 +85,23 @@ export function CartDrawer() {
               ))}
             </div>
           ) : (
-            <div className="flex-grow flex flex-col items-center justify-center text-center">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="flex-grow flex flex-col items-center justify-center text-center"
+            >
               <ShoppingCart className="h-16 w-16 text-muted-foreground/50 mb-4" />
               <p className="text-lg font-semibold">Your cart is empty</p>
               <p className="text-muted-foreground">Find a new plant friend to take home!</p>
-            </div>
+            </motion.div>
           )}
           {cart && cart.items.length > 0 && (
             <SheetFooter className="mt-auto">
               <div className="w-full space-y-4">
                 <Separator />
                 <div className="flex items-center gap-2">
-                  <Input placeholder="Promo code" value={promoInput} onChange={(e) => setPromoInput(e.target.value)} />
+                  <Input placeholder="Promo code" value={promoInput} onChange={(e) => setPromoInput(e.target.value)} aria-label="Promo code"/>
                   <Button variant="outline" onClick={() => applyPromoCode(promoInput)}>Apply</Button>
                 </div>
                 <div className="space-y-1">
