@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { post } from '@/lib/api-client';
 import type { User } from '@shared/types';
 import { useCartActions } from '@/hooks/use-cart';
-import { Leaf } from 'lucide-react';
+import { Leaf, ChevronLeft } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 const loginSchema = z.object({
@@ -47,10 +47,15 @@ export default function LoginPage() {
     <div className="min-h-screen flex flex-col">
       <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60" role="navigation">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center gap-2">
-            <Leaf className="h-8 w-8 text-primary" />
-            <h1 className="text-2xl font-bold font-display text-primary">Verdure</h1>
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link to="/" className="flex items-center gap-2">
+              <Leaf className="h-8 w-8 text-primary" />
+              <h1 className="text-2xl font-bold font-display text-primary">Verdure</h1>
+            </Link>
+            <Button asChild variant="ghost" aria-label="Return to main page">
+              <Link to="/"><ChevronLeft className="h-4 w-4 mr-2" /> Back to Home</Link>
+            </Button>
+          </div>
         </div>
       </header>
       <main className="flex-grow flex items-center justify-center">
