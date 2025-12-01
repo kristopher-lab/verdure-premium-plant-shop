@@ -7,11 +7,11 @@ import type { Product } from '@shared/types';
 import { Badge } from './ui/badge';
 type ProductCardProps = {
   product: Product;
-  onAddToCart: (product: Product, variantSku: string) => void;
+  onAddToCart: (productId: string, variantSku: string) => void;
   onQuickView: (product: Product) => void;
 };
 export function ProductCard({ product, onAddToCart, onQuickView }: ProductCardProps) {
-  const formatPrice = (price: number) => `${(price / 100).toFixed(2)}`;
+  const formatPrice = (price: number) => `$${(price / 100).toFixed(2)}`;
   return (
     <motion.div
       layout
@@ -21,21 +21,18 @@ export function ProductCard({ product, onAddToCart, onQuickView }: ProductCardPr
       transition={{ duration: 0.3, ease: 'easeOut' }}
       className="group relative"
     >
-      <Card className="overflow-hidden h-full flex flex-col transition-all duration-300 ease-in-out hover:shadow-glow hover:-translate-y-2 active:scale-95">
+      <Card className="overflow-hidden h-full flex flex-col transition-all duration-300 ease-in-out hover:shadow-lg hover:-translate-y-1">
         <CardHeader className="p-0 border-b">
           <div className="overflow-hidden aspect-[4/3] relative">
             <img
-              src={product.images?.[0] ?? ''}
+              src={product.images[0]}
               alt={product.name}
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-              loading="lazy"
             />
             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-              <motion.div variants={{ hover: { scale: 1.05 } }} whileHover="hover">
-                <Button variant="secondary" onClick={() => onQuickView(product)} aria-label={`Open quick view for ${product.name}`}>
-                  Quick View
-                </Button>
-              </motion.div>
+              <Button variant="secondary" onClick={() => onQuickView(product)}>
+                Quick View
+              </Button>
             </div>
           </div>
         </CardHeader>
@@ -54,7 +51,7 @@ export function ProductCard({ product, onAddToCart, onQuickView }: ProductCardPr
         <CardFooter className="p-4 pt-0">
           <Button
             className="w-full"
-            onClick={() => onAddToCart(product, product.variants[0].sku)}
+            onClick={() => onAddToCart(product.id, product.variants[0].sku)}
           >
             <Plus className="mr-2 h-4 w-4" /> Add to Cart
           </Button>
@@ -66,13 +63,13 @@ export function ProductCard({ product, onAddToCart, onQuickView }: ProductCardPr
 export function ProductCardSkeleton() {
   return (
     <Card className="overflow-hidden">
-      <Skeleton className="aspect-[4/3] w-full animate-shimmer" />
+      <Skeleton className="aspect-[4/3] w-full" />
       <CardContent className="p-4 space-y-2">
-        <Skeleton className="h-6 w-3/4 animate-shimmer" />
-        <Skeleton className="h-4 w-1/2 animate-shimmer" />
+        <Skeleton className="h-6 w-3/4" />
+        <Skeleton className="h-4 w-1/2" />
       </CardContent>
       <CardFooter className="p-4 pt-0">
-        <Skeleton className="h-10 w-full animate-shimmer" />
+        <Skeleton className="h-10 w-full" />
       </CardFooter>
     </Card>
   );

@@ -1,90 +1,82 @@
-import { useState } from 'react';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, X, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter, SheetDescription } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
-import { useCart, useCartActions, useCartUi } from '@/hooks/use-cart';
-import { Link } from 'react-router-dom';
-import { toast } from 'sonner';
-import { GuestCheckoutModal } from './GuestCheckoutModal';
-import { motion } from 'framer-motion';
-const formatPrice = (price: number) => `${(price / 100).toFixed(2)}`;
-export function CartDrawer() {
-  const { data: cart } = useCart();
-  const { isCartOpen, discount } = useCartUi();
-  const { toggleCart, checkout, isAuthenticated, isCheckingOut } = useCartActions();
-  const [showGuestModal, setShowGuestModal] = useState(false);
-  const itemCount = cart?.items.reduce((sum, item) => sum + item.quantity, 0) ?? 0;
-  const subtotal = cart?.subtotal ?? 0;
-  const total = subtotal * (1 - discount);
-  const handleCheckout = () => {
-    if (!cart || cart.items.length === 0) {
-      toast.error('Your cart is empty.');
-      return;
-    }
-    if (isAuthenticated) {
-      checkout();
-    } else {
-      setShowGuestModal(true);
-    }
-  };
-  const handleGuestCheckout = (guestInfo: { name: string; email: string }) => {
-    setShowGuestModal(false);
-    checkout({ guestInfo });
-  };
+import { useCart, useCartActions } from '@/hooks/use-cart';
+import type { CartItem } from '@shared/types';
+const formatPrice = (price: number) => `$${(price / 100).toFixed(2)}`;
+function CartItemView({ item }: { item: CartItem }) {
+  const { updateQuantity, removeFromCart } = useCartActions();
   return (
-    <>
-      <Sheet open={isCartOpen} onOpenChange={toggleCart}>
-        <SheetTrigger asChild>
-          <Button variant="outline" size="icon" className="relative min-h-11 min-w-11" aria-label={`Open cart, ${itemCount} items`}>
-            <ShoppingCart className="h-5 w-5" />
-            {itemCount > 0 && (
-              <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
-                {itemCount}
-              </span>
-            )}
-          </Button>
-        </SheetTrigger>
-        <SheetContent className="w-full sm:max-w-md flex flex-col" role="dialog" aria-modal="true" aria-labelledby="cart-title" aria-describedby="cart-description">
-          <SheetHeader>
-            <SheetTitle id="cart-title" className="text-2xl font-display">Your Cart</SheetTitle>
-            <SheetDescription id="cart-description">A summary of items in your shopping cart.</SheetDescription>
-          </SheetHeader>
-          <Separator />
-          {cart && cart.items.length > 0 ? (
-            <div className="flex-grow flex flex-col justify-center text-center">
-                <p className="text-lg font-semibold">{itemCount} {itemCount > 1 ? 'items' : 'item'} in your cart</p>
-                <p className="text-muted-foreground">Subtotal: {formatPrice(total)}</p>
-            </div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="flex-grow flex flex-col items-center justify-center text-center"
-            >
-              <ShoppingCart className="h-16 w-16 text-muted-foreground/50 mb-4" />
-              <p className="text-lg font-semibold">Your cart is empty</p>
-              <p className="text-muted-foreground">Find a new plant friend to take home!</p>
-            </motion.div>
+    <div className="flex items-center gap-4 py-4">
+      <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded-md" />
+      <div className="flex-grow">
+        <p className="font-semibold">{item.name}</p>
+        <p className="text-sm text-muted-foreground">{item.variantName}</p>
+        <p className="text-sm font-medium">{formatPrice(item.price)}</p>
+      </div>
+      <div className="flex flex-col items-end gap-2">
+        <div className="flex items-center border rounded-md">
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.id, item.quantity - 1)}>-</Button>
+          <span className="w-8 text-center text-sm">{item.quantity}</span>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.id, item.quantity + 1)}>+</Button>
+        </div>
+        <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive" onClick={() => removeFromCart(item.id)}>
+          <Trash2 className="h-4 w-4 mr-1" /> Remove
+        </Button>
+      </div>
+    </div>
+  );
+}
+export function CartDrawer() {
+  const { cart, isCartOpen } = useCart();
+  const { toggleCart, checkout } = useCartActions();
+  const itemCount = cart?.items.reduce((sum, item) => sum + item.quantity, 0) ?? 0;
+  return (
+    <Sheet open={isCartOpen} onOpenChange={toggleCart}>
+      <SheetTrigger asChild>
+        <Button variant="outline" size="icon" className="relative">
+          <ShoppingCart className="h-5 w-5" />
+          {itemCount > 0 && (
+            <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+              {itemCount}
+            </span>
           )}
+        </Button>
+      </SheetTrigger>
+      <SheetContent className="w-full sm:max-w-md flex flex-col">
+        <SheetHeader>
+          <SheetTitle className="text-2xl font-display">Your Cart</SheetTitle>
+        </SheetHeader>
+        <Separator />
+        {cart && cart.items.length > 0 ? (
+          <div className="flex-grow overflow-y-auto -mx-6 px-6">
+            {cart.items.map(item => (
+              <CartItemView key={item.id} item={item} />
+            ))}
+          </div>
+        ) : (
+          <div className="flex-grow flex flex-col items-center justify-center text-center">
+            <ShoppingCart className="h-16 w-16 text-muted-foreground/50 mb-4" />
+            <p className="text-lg font-semibold">Your cart is empty</p>
+            <p className="text-muted-foreground">Find a new plant friend to take home!</p>
+          </div>
+        )}
+        {cart && cart.items.length > 0 && (
           <SheetFooter className="mt-auto">
-            <div className="w-full space-y-2">
-              <Button size="lg" className="w-full min-h-11 hover:shadow-glow hover:scale-105 transition-all duration-200" asChild variant="outline" aria-label="View cart details and checkout">
-                <Link to="/cart" onClick={() => toggleCart(false)}>View Cart & Checkout</Link>
-              </Button>
-              <Button size="lg" className="w-full btn-gradient min-h-11 hover:shadow-glow hover:scale-105 transition-all duration-200" onClick={handleCheckout} disabled={isCheckingOut || itemCount === 0} aria-label="Proceed to checkout">
-                {isCheckingOut ? 'Processing...' : 'Proceed to Checkout'}
+            <div className="w-full space-y-4">
+              <Separator />
+              <div className="flex justify-between font-semibold text-lg">
+                <span>Subtotal</span>
+                <span>{formatPrice(cart.subtotal)}</span>
+              </div>
+              <Button size="lg" className="w-full btn-gradient" onClick={checkout}>
+                Proceed to Checkout
               </Button>
             </div>
           </SheetFooter>
-        </SheetContent>
-      </Sheet>
-      <GuestCheckoutModal
-        isOpen={showGuestModal}
-        onOpenChange={setShowGuestModal}
-        onSubmit={handleGuestCheckout}
-      />
-    </>
+        )}
+      </SheetContent>
+    </Sheet>
   );
 }

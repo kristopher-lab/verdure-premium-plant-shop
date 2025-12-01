@@ -1,148 +1,213 @@
-// Home page of the app, Currently a demo page for demonstration.
-// Please rewrite this file to implement your own logic. Do not replace or delete it, simply rewrite this HomePage.tsx file.
-import { useEffect } from 'react'
-import { Sparkles } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { ThemeToggle } from '@/components/ThemeToggle'
-import { Toaster, toast } from '@/components/ui/sonner'
-import { create } from 'zustand'
-import { useShallow } from 'zustand/react/shallow'
-import { AppLayout } from '@/components/layout/AppLayout'
-
-// Timer store: independent slice with a clear, minimal API, for demonstration
-type TimerState = {
-  isRunning: boolean;
-  elapsedMs: number;
-  start: () => void;
-  pause: () => void;
-  reset: () => void;
-  tick: (deltaMs: number) => void;
-}
-
-const useTimerStore = create<TimerState>((set) => ({
-  isRunning: false,
-  elapsedMs: 0,
-  start: () => set({ isRunning: true }),
-  pause: () => set({ isRunning: false }),
-  reset: () => set({ elapsedMs: 0, isRunning: false }),
-  tick: (deltaMs) => set((s) => ({ elapsedMs: s.elapsedMs + deltaMs })),
-}))
-
-// Counter store: separate slice to showcase multiple stores without coupling
-type CounterState = {
-  count: number;
-  inc: () => void;
-  reset: () => void;
-}
-
-const useCounterStore = create<CounterState>((set) => ({
-  count: 0,
-  inc: () => set((s) => ({ count: s.count + 1 })),
-  reset: () => set({ count: 0 }),
-}))
-
-function formatDuration(ms: number): string {
-  const total = Math.max(0, Math.floor(ms / 1000))
-  const m = Math.floor(total / 60)
-  const s = total % 60
-  return `${m}:${s.toString().padStart(2, '0')}`
-}
-
+import { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { LayoutGrid, List, Search, SlidersHorizontal, Leaf } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { Toaster, toast } from 'sonner';
+import { get } from '@/lib/api-client';
+import type { Product } from '@shared/types';
+import { ProductCard, ProductCardSkeleton } from '@/components/ProductCard';
+import { ProductQuickView } from '@/components/ProductQuickView';
+import { CartDrawer } from '@/components/CartDrawer';
+import { useCartActions } from '@/hooks/use-cart';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Slider } from '@/components/ui/slider';
+import { Label } from '@/components/ui/label';
+const categories = ['Indoor', 'Outdoor', 'Succulents', 'Cacti'];
+const tags = ['Full Sun', 'Partial Shade', 'Low Light', 'Pet-Friendly', 'Air Purifying'];
 export function HomePage() {
-  // Select only what is needed to avoid unnecessary re-renders
-  const { isRunning, elapsedMs } = useTimerStore(
-    useShallow((s) => ({ isRunning: s.isRunning, elapsedMs: s.elapsedMs })),
-  )
-  const start = useTimerStore((s) => s.start)
-  const pause = useTimerStore((s) => s.pause)
-  const resetTimer = useTimerStore((s) => s.reset)
-  const count = useCounterStore((s) => s.count)
-  const inc = useCounterStore((s) => s.inc)
-  const resetCount = useCounterStore((s) => s.reset)
-
-  // Drive the timer only while running; avoid update-depth issues with a scoped RAF
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
+  const { initCart, addToCart } = useCartActions();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filters, setFilters] = useState<{ categories: string[], tags: string[], priceRange: [number, number] }>({
+    categories: [],
+    tags: [],
+    priceRange: [0, 200],
+  });
   useEffect(() => {
-    if (!isRunning) return
-    let raf = 0
-    let last = performance.now()
-    const loop = () => {
-      const now = performance.now()
-      const delta = now - last
-      last = now
-      // Read store API directly to keep effect deps minimal and stable
-      useTimerStore.getState().tick(delta)
-      raf = requestAnimationFrame(loop)
+    initCart();
+    const fetchProducts = async () => {
+      setIsLoading(true);
+      try {
+        const { items } = await get<{ items: Product[] }>('/api/products');
+        setProducts(items);
+      } catch (error) {
+        toast.error('Failed to fetch products.');
+        console.error(error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProducts();
+  }, [initCart]);
+  const handleFilterChange = (type: 'categories' | 'tags', value: string) => {
+    setFilters(prev => {
+      const current = prev[type];
+      const next = current.includes(value) ? current.filter(item => item !== value) : [...current, value];
+      return { ...prev, [type]: next };
+    });
+  };
+  const handlePriceChange = (value: number[]) => {
+    setFilters(prev => ({ ...prev, priceRange: [value[0], value[1]] }));
+  };
+  const filteredProducts = useMemo(() => {
+    return products
+      .filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()))
+      .filter(p => filters.categories.length === 0 || filters.categories.includes(p.category))
+      .filter(p => filters.tags.length === 0 || filters.tags.some(tag => p.tags.includes(tag as any)))
+      .filter(p => (p.price / 100) >= filters.priceRange[0] && (p.price / 100) <= filters.priceRange[1]);
+  }, [products, searchTerm, filters]);
+  const handleAddToCart = (productId: string, variantSku: string) => {
+    const product = products.find(p => p.id === productId);
+    if (product) {
+      addToCart(product, variantSku, 1);
     }
-    raf = requestAnimationFrame(loop)
-    return () => cancelAnimationFrame(raf)
-  }, [isRunning])
-
-  const onPleaseWait = () => {
-    inc()
-    if (!isRunning) {
-      start()
-      toast.success('Building your app…', {
-        description: 'Hang tight, we\'re setting everything up.',
-      })
-    } else {
-      pause()
-      toast.info('Taking a short pause', {
-        description: 'We\'ll continue shortly.',
-      })
-    }
-  }
-
-  const formatted = formatDuration(elapsedMs)
-
+  };
+  const FilterSidebar = () => (
+    <aside className="lg:col-span-3 space-y-6">
+      <h2 className="text-2xl font-semibold">Filters</h2>
+      <Accordion type="multiple" defaultValue={['category', 'price', 'tags']} className="w-full">
+        <AccordionItem value="category">
+          <AccordionTrigger className="text-lg">Category</AccordionTrigger>
+          <AccordionContent className="space-y-2">
+            {categories.map(cat => (
+              <div key={cat} className="flex items-center space-x-2">
+                <Checkbox id={cat} onCheckedChange={() => handleFilterChange('categories', cat)} checked={filters.categories.includes(cat)} />
+                <label htmlFor={cat} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{cat}</label>
+              </div>
+            ))}
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="price">
+          <AccordionTrigger className="text-lg">Price Range</AccordionTrigger>
+          <AccordionContent className="pt-4">
+            <Slider
+              defaultValue={[0, 200]}
+              max={200}
+              step={10}
+              onValueCommit={handlePriceChange}
+            />
+            <div className="flex justify-between text-sm text-muted-foreground mt-2">
+              <span>${filters.priceRange[0]}</span>
+              <span>${filters.priceRange[1]}</span>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="tags">
+          <AccordionTrigger className="text-lg">Features</AccordionTrigger>
+          <AccordionContent className="space-y-2">
+            {tags.map(tag => (
+              <div key={tag} className="flex items-center space-x-2">
+                <Checkbox id={tag} onCheckedChange={() => handleFilterChange('tags', tag)} checked={filters.tags.includes(tag)} />
+                <label htmlFor={tag} className="text-sm font-medium leading-none">{tag}</label>
+              </div>
+            ))}
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
+    </aside>
+  );
   return (
-    <AppLayout>
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground p-4 overflow-hidden relative">
-        <ThemeToggle />
-        <div className="absolute inset-0 bg-gradient-rainbow opacity-10 dark:opacity-20 pointer-events-none" />
-        <div className="text-center space-y-8 relative z-10 animate-fade-in">
-          <div className="flex justify-center">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-primary floating">
-              <Sparkles className="w-8 h-8 text-white rotating" />
-            </div>
+    <div className="bg-background min-h-screen">
+      <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+          <div className="flex items-center gap-2">
+            <Leaf className="h-8 w-8 text-primary" />
+            <h1 className="text-2xl font-bold font-display text-primary">Verdure</h1>
           </div>
-          <h1 className="text-5xl md:text-7xl font-display font-bold text-balance leading-tight">
-            Creating your <span className="text-gradient">app</span>
-          </h1>
-          <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto text-pretty">
-            Your application would be ready soon.
-          </p>
-          <div className="flex justify-center gap-4">
-            <Button 
-              size="lg"
-              onClick={onPleaseWait}
-              className="btn-gradient px-8 py-4 text-lg font-semibold hover:-translate-y-0.5 transition-all duration-200"
-              aria-live="polite"
-            >
-              Please Wait
-            </Button>
-          </div>
-          <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
-            <div>
-              Time elapsed: <span className="font-medium tabular-nums text-foreground">{formatted}</span>
-            </div>
-            <div>
-              Coins: <span className="font-medium tabular-nums text-foreground">{count}</span>
-            </div>
-          </div>
-          <div className="flex justify-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => { resetTimer(); resetCount(); toast('Reset complete') }}>
-              Reset
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => { inc(); toast('Coin added') }}>
-              Add Coin
-            </Button>
+          <div className="flex items-center gap-4">
+            <ThemeToggle className="relative top-0 right-0" />
+            <CartDrawer />
           </div>
         </div>
-        <footer className="absolute bottom-8 text-center text-muted-foreground/80">
-          <p>Powered by Cloudflare</p>
-        </footer>
-        <Toaster richColors closeButton />
-      </div>
-    </AppLayout>
-  )
+      </header>
+      <main>
+        {/* Hero Section */}
+        <section className="relative py-20 md:py-32 bg-secondary/50">
+          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1501004318641-b39e6451bec6?q=80&w=1973')] bg-cover bg-center opacity-20"></div>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="text-5xl md:text-7xl font-display font-bold text-balance leading-tight"
+            >
+              Bring Nature <span className="text-gradient">Indoors</span>
+            </motion.h1>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="mt-4 text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto text-pretty"
+            >
+              Discover premium houseplants and accessories to transform your space into a green sanctuary.
+            </motion.p>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="mt-8"
+            >
+              <Button size="lg" className="btn-gradient" onClick={() => document.getElementById('product-grid')?.scrollIntoView({ behavior: 'smooth' })}>
+                Shop All Plants
+              </Button>
+            </motion.div>
+          </div>
+        </section>
+        {/* Main Content */}
+        <div id="product-grid" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="py-8 md:py-10 lg:py-12">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              <FilterSidebar />
+              <div className="lg:col-span-9">
+                <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4">
+                  <div className="relative w-full sm:max-w-xs">
+                    <Input placeholder="Search plants..." className="pl-10" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">{filteredProducts.length} products found</p>
+                </div>
+                <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
+                  <AnimatePresence>
+                    {isLoading
+                      ? Array.from({ length: 9 }).map((_, i) => <ProductCardSkeleton key={i} />)
+                      : filteredProducts.map(product => (
+                          <ProductCard
+                            key={product.id}
+                            product={product}
+                            onAddToCart={(productId, variantSku) => handleAddToCart(productId, variantSku)}
+                            onQuickView={setQuickViewProduct}
+                          />
+                        ))}
+                  </AnimatePresence>
+                </motion.div>
+                {!isLoading && filteredProducts.length === 0 && (
+                    <div className="text-center py-16">
+                        <p className="text-lg font-semibold">No plants match your criteria.</p>
+                        <p className="text-muted-foreground">Try adjusting your filters.</p>
+                    </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+      <footer className="border-t">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-sm text-muted-foreground">
+          <p>&copy; {new Date().getFullYear()} Verdure. Built with ❤️ at Cloudflare.</p>
+        </div>
+      </footer>
+      <ProductQuickView
+        product={quickViewProduct}
+        isOpen={!!quickViewProduct}
+        onOpenChange={(isOpen) => !isOpen && setQuickViewProduct(null)}
+        onAddToCart={addToCart}
+      />
+      <Toaster richColors closeButton />
+    </div>
+  );
 }
