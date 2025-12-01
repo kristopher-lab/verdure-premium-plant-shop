@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart, Trash2, Leaf, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,8 +13,7 @@ import type { CartItem } from '@shared/types';
 import { GuestCheckoutModal } from '@/components/GuestCheckoutModal';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { OrderConfirmation } from '@/components/OrderConfirmation';
-import { Skeleton } from '@/components/ui/skeleton';
-const formatPrice = (price: number) => `${(price / 100).toFixed(2)}`;
+const formatPrice = (price: number) => `$${(price / 100).toFixed(2)}`;
 function CartItemView({ item }: { item: CartItem }) {
   const { updateQuantity, removeFromCart } = useCartActions();
   return (
@@ -26,19 +25,15 @@ function CartItemView({ item }: { item: CartItem }) {
       transition={{ duration: 0.3 }}
       className="flex items-start gap-4 py-4"
     >
-      <img src={item.image} alt={item.name} className="w-24 h-24 object-cover rounded-md border" loading="lazy" />
+      <img src={item.image} alt={item.name} className="w-24 h-24 object-cover rounded-md border" />
       <div className="flex-grow">
         <h3 className="font-semibold text-lg">{item.name}</h3>
         <p className="text-sm text-muted-foreground">{item.variantName}</p>
         <p className="text-md font-medium mt-1">{formatPrice(item.price)}</p>
         <div className="flex items-center border rounded-md w-fit mt-2">
-          <motion.div whileTap={{ scale: 0.95 }}>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity({ itemId: item.id, quantity: item.quantity - 1 })} aria-label={`Decrease quantity of ${item.name}`}>-</Button>
-          </motion.div>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity({ itemId: item.id, quantity: item.quantity - 1 })} aria-label={`Decrease quantity of ${item.name}`}>-</Button>
           <span className="w-8 text-center text-sm font-semibold" aria-live="polite">{item.quantity}</span>
-          <motion.div whileTap={{ scale: 0.95 }}>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity({ itemId: item.id, quantity: item.quantity + 1 })} aria-label={`Increase quantity of ${item.name}`}>+</Button>
-          </motion.div>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity({ itemId: item.id, quantity: item.quantity + 1 })} aria-label={`Increase quantity of ${item.name}`}>+</Button>
         </div>
       </div>
       <div className="text-right">
@@ -76,7 +71,7 @@ export default function CartPage() {
   };
   return (
     <div className="bg-background min-h-screen">
-      <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60" role="navigation">
+      <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-2">
             <Leaf className="h-8 w-8 text-primary" />
@@ -93,19 +88,7 @@ export default function CartPage() {
           <div className="py-8 md:py-10 lg:py-12">
             <h1 className="text-4xl font-bold font-display mb-8">Your Cart</h1>
             {isLoading ? (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-                <Card className="lg:col-span-2 space-y-4 p-6">
-                  <Skeleton className="h-24 w-full animate-shimmer" />
-                  <Skeleton className="h-24 w-full animate-shimmer" />
-                  <Skeleton className="h-24 w-full animate-shimmer" />
-                </Card>
-                <Card className="sticky top-24 p-6 space-y-4">
-                  <Skeleton className="h-8 w-1/2 animate-shimmer" />
-                  <Skeleton className="h-10 w-full animate-shimmer" />
-                  <Skeleton className="h-20 w-full animate-shimmer" />
-                  <Skeleton className="h-12 w-full animate-shimmer" />
-                </Card>
-              </div>
+              <p>Loading cart...</p>
             ) : !cart || cart.items.length === 0 ? (
               <div className="text-center py-16 border-2 border-dashed rounded-lg">
                 <ShoppingCart className="h-16 w-16 text-muted-foreground/50 mx-auto mb-4" />
@@ -135,7 +118,7 @@ export default function CartPage() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex items-center gap-2">
-                      <Input placeholder="Promo code" value={promoInput} onChange={(e) => setPromoInput(e.target.value)} aria-label="Promo code" id="promo-code" />
+                      <Input placeholder="Promo code" value={promoInput} onChange={(e) => setPromoInput(e.target.value)} aria-label="Promo code" />
                       <Button variant="outline" onClick={() => applyPromoCode(promoInput)}>Apply</Button>
                     </div>
                     <Separator />

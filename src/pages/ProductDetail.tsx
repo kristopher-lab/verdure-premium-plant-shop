@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ChevronLeft, Minus, Plus } from 'lucide-react';
+import { ChevronLeft, Minus, Plus, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -14,7 +14,8 @@ import { useProduct } from '@/hooks/use-products';
 import { useCartMutations, useCartUi, useCartUiActions } from '@/hooks/use-cart';
 import { RelatedProductsCarousel } from '@/components/RelatedProductsCarousel';
 import { OrderConfirmation } from '@/components/OrderConfirmation';
-const formatPrice = (price: number) => `${(price / 100).toFixed(2)}`;
+import type { Product } from '@shared/types';
+const formatPrice = (price: number) => `$${(price / 100).toFixed(2)}`;
 function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
   const { data: product, isLoading, error } = useProduct(slug || '');
@@ -58,7 +59,8 @@ function ProductDetail() {
               Back to Plants
             </Link>
           </Button>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <Button asChild variant="ghost"><Link to="/cart"><ShoppingCart className="h-4 w-4 mr-2" /> Cart</Link></Button>
             <ThemeToggle className="relative top-0 right-0" />
             <CartDrawer />
           </div>
@@ -73,7 +75,7 @@ function ProductDetail() {
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}>
               <h1 className="text-4xl md:text-5xl font-display font-bold">{product.name}</h1>
               <div className="mt-4">
-                <span className="text-4xl font-bold text-primary">${formatPrice(selectedVariant?.price ?? product.price)}</span>
+                <span className="text-4xl font-bold text-primary">{formatPrice(selectedVariant?.price ?? product.price)}</span>
               </div>
               <p className="mt-4 text-lg text-muted-foreground text-pretty">{product.description}</p>
               <div className="mt-6 space-y-6">

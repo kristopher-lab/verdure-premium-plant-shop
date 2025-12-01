@@ -1,46 +1,18 @@
 import { useState } from 'react';
-import { ShoppingCart, Trash2 } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import { useCart, useCartActions, useCartUi } from '@/hooks/use-cart';
-import type { CartItem } from '@shared/types';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Input } from './ui/input';
-import { Badge } from './ui/badge';
 import { GuestCheckoutModal } from './GuestCheckoutModal';
 import { motion } from 'framer-motion';
-const formatPrice = (price: number) => `${(price / 100).toFixed(2)}`;
-function CartItemView({ item }: { item: CartItem }) {
-  const { updateQuantity, removeFromCart } = useCartActions();
-  return (
-    <div className="flex items-center gap-4 py-4">
-      <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded-md" />
-      <div className="flex-grow">
-        <p className="font-semibold">{item.name}</p>
-        <p className="text-sm text-muted-foreground">{item.variantName}</p>
-        <p className="text-sm font-medium">{formatPrice(item.price)}</p>
-      </div>
-      <div className="flex flex-col items-end gap-2">
-        <div className="flex items-center border rounded-md">
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity({ itemId: item.id, quantity: item.quantity - 1 })} aria-label="Decrease quantity">-</Button>
-          <span className="w-8 text-center text-sm">{item.quantity}</span>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => updateQuantity({ itemId: item.id, quantity: item.quantity + 1 })} aria-label="Increase quantity">+</Button>
-        </div>
-        <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive" onClick={() => removeFromCart(item.id)} aria-label={`Remove ${item.name} from cart`}>
-          <Trash2 className="h-4 w-4 mr-1" /> Remove
-        </Button>
-      </div>
-    </div>
-  );
-}
+const formatPrice = (price: number) => `$${(price / 100).toFixed(2)}`;
 export function CartDrawer() {
-  const navigate = useNavigate();
   const { data: cart } = useCart();
-  const { isCartOpen, discount, promoCode } = useCartUi();
-  const { toggleCart, checkout, isAuthenticated, applyPromoCode, isCheckingOut } = useCartActions();
-  const [promoInput, setPromoInput] = useState('');
+  const { isCartOpen, discount } = useCartUi();
+  const { toggleCart, checkout, isAuthenticated, isCheckingOut } = useCartActions();
   const [showGuestModal, setShowGuestModal] = useState(false);
   const itemCount = cart?.items.reduce((sum, item) => sum + item.quantity, 0) ?? 0;
   const subtotal = cart?.subtotal ?? 0;
@@ -73,19 +45,19 @@ export function CartDrawer() {
             )}
           </Button>
         </SheetTrigger>
-        <SheetContent className="w-full sm:max-w-md flex flex-col" role="dialog" aria-modal="true" aria-labelledby="cart-title">
+        <SheetContent className="w-full sm:max-w-md flex flex-col" role="dialog" aria-modal="true" aria-labelledby="cart-title" aria-describedby="cart-description">
           <SheetHeader>
             <SheetTitle id="cart-title" className="text-2xl font-display">Your Cart</SheetTitle>
+            <p id="cart-description" className="sr-only">A summary of items in your shopping cart.</p>
           </SheetHeader>
           <Separator />
           {cart && cart.items.length > 0 ? (
-            <div className="flex-grow overflow-y-auto -mx-6 px-6">
-              {cart.items.map(item => (
-                <CartItemView key={item.id} item={item} />
-              ))}
+            <div className="flex-grow flex flex-col justify-center text-center">
+                <p className="text-lg font-semibold">{itemCount} {itemCount > 1 ? 'items' : 'item'} in your cart</p>
+                <p className="text-muted-foreground">Subtotal: {formatPrice(total)}</p>
             </div>
           ) : (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
@@ -96,36 +68,16 @@ export function CartDrawer() {
               <p className="text-muted-foreground">Find a new plant friend to take home!</p>
             </motion.div>
           )}
-          {cart && cart.items.length > 0 && (
-            <SheetFooter className="mt-auto">
-              <div className="w-full space-y-4">
-                <Separator />
-                <div className="flex items-center gap-2">
-                  <Input placeholder="Promo code" value={promoInput} onChange={(e) => setPromoInput(e.target.value)} aria-label="Promo code"/>
-                  <Button variant="outline" onClick={() => applyPromoCode(promoInput)}>Apply</Button>
-                </div>
-                <div className="space-y-1">
-                  <div className="flex justify-between">
-                    <span>Subtotal</span>
-                    <span>{formatPrice(subtotal)}</span>
-                  </div>
-                  {discount > 0 && (
-                    <div className="flex justify-between text-primary">
-                      <span>Discount <Badge variant="secondary">{promoCode}</Badge></span>
-                      <span>-{formatPrice(subtotal * discount)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between font-semibold text-lg">
-                    <span>Total</span>
-                    <span>{formatPrice(total)}</span>
-                  </div>
-                </div>
-                <Button size="lg" className="w-full btn-gradient" onClick={handleCheckout} disabled={isCheckingOut}>
-                  {isCheckingOut ? 'Processing...' : 'Proceed to Checkout'}
-                </Button>
-              </div>
-            </SheetFooter>
-          )}
+          <SheetFooter className="mt-auto">
+            <div className="w-full space-y-2">
+              <Button size="lg" className="w-full" asChild variant="outline">
+                <Link to="/cart" onClick={() => toggleCart(false)}>View Full Cart</Link>
+              </Button>
+              <Button size="lg" className="w-full btn-gradient" onClick={handleCheckout} disabled={isCheckingOut || itemCount === 0}>
+                {isCheckingOut ? 'Processing...' : 'Proceed to Checkout'}
+              </Button>
+            </div>
+          </SheetFooter>
         </SheetContent>
       </Sheet>
       <GuestCheckoutModal

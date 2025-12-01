@@ -14,6 +14,7 @@ import '@/index.css'
 import { HomePage } from '@/pages/HomePage'
 import ProductDetail from '@/pages/ProductDetail';
 import LoginPage from '@/pages/LoginPage';
+import CartPage from '@/pages/CartPage';
 import { DemoPage } from '@/pages/DemoPage';
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -37,6 +38,11 @@ const router = createBrowserRouter([
   {
     path: "/login",
     element: <LoginPage />,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: "/cart",
+    element: <CartPage />,
     errorElement: <RouteErrorBoundary />,
   },
   {

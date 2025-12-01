@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Leaf, User, LogOut } from 'lucide-react';
+import { Search, Leaf, User, LogOut, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -107,8 +107,8 @@ function SearchParamsWrapper({ setQuickViewProduct, handleAddToCart }: SearchPar
           </div>
           <p className="text-sm text-muted-foreground">{filteredProducts?.length ?? 0} products found</p>
         </div>
-        <motion.div 
-          layout 
+        <motion.div
+          layout
           className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 md:gap-8"
           variants={{
             hidden: { opacity: 0 },
@@ -168,6 +168,7 @@ export function HomePage() {
             ) : (
               <Button asChild variant="ghost"><Link to="/login"><User className="h-4 w-4 mr-2" /> Login</Link></Button>
             )}
+            <Button asChild variant="ghost"><Link to="/cart"><ShoppingCart className="h-4 w-4 mr-2" /> Cart</Link></Button>
             <ThemeToggle className="relative top-0 right-0" />
             <CartDrawer />
           </div>
@@ -175,7 +176,7 @@ export function HomePage() {
       </header>
       <main>
         <section className="relative py-20 md:py-32 bg-secondary/50 overflow-hidden">
-          <motion.div 
+          <motion.div
             className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1501004318641-b39e6451bec6?q=80&w=1973')] bg-cover bg-center opacity-20"
             animate={{ y: [0, -10, 0] }}
             transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
@@ -205,7 +206,7 @@ export function HomePage() {
       </main>
       <footer className="border-t">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Verdure. Built with ❤️ at Cloudflare.</p>
+          <p>&copy; {new Date().getFullYear()} Verdure. Built with ❤��� at Cloudflare.</p>
         </div>
       </footer>
       <ProductQuickView
