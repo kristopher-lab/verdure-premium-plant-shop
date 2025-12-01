@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Leaf, User, LogOut, ShoppingCart } from 'lucide-react';
+import { Search, Leaf, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -168,7 +168,6 @@ export function HomePage() {
             ) : (
               <Button asChild variant="ghost"><Link to="/login"><User className="h-4 w-4 mr-2" /> Login</Link></Button>
             )}
-            <Button asChild variant="ghost"><Link to="/cart"><ShoppingCart className="h-4 w-4 mr-2" /> Cart</Link></Button>
             <ThemeToggle className="relative top-0 right-0" />
             <CartDrawer />
           </div>
@@ -206,7 +205,7 @@ export function HomePage() {
       </main>
       <footer className="border-t">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Verdure. Built with ❤��� at Cloudflare.</p>
+          <p>&copy; {new Date().getFullYear()} Verdure. Built with ❤️ at Cloudflare.</p>
         </div>
       </footer>
       <ProductQuickView

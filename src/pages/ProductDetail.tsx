@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ChevronLeft, Minus, Plus, ShoppingCart } from 'lucide-react';
+import { ChevronLeft, Minus, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -14,7 +14,6 @@ import { useProduct } from '@/hooks/use-products';
 import { useCartMutations, useCartUi, useCartUiActions } from '@/hooks/use-cart';
 import { RelatedProductsCarousel } from '@/components/RelatedProductsCarousel';
 import { OrderConfirmation } from '@/components/OrderConfirmation';
-import type { Product } from '@shared/types';
 const formatPrice = (price: number) => `$${(price / 100).toFixed(2)}`;
 function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
@@ -60,7 +59,6 @@ function ProductDetail() {
             </Link>
           </Button>
           <div className="flex items-center gap-2">
-            <Button asChild variant="ghost"><Link to="/cart"><ShoppingCart className="h-4 w-4 mr-2" /> Cart</Link></Button>
             <ThemeToggle className="relative top-0 right-0" />
             <CartDrawer />
           </div>

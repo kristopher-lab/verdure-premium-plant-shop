@@ -15,6 +15,7 @@ import { HomePage } from '@/pages/HomePage'
 import ProductDetail from '@/pages/ProductDetail';
 import LoginPage from '@/pages/LoginPage';
 import CartPage from '@/pages/CartPage';
+import CheckoutPage from '@/pages/CheckoutPage';
 import { DemoPage } from '@/pages/DemoPage';
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -43,6 +44,11 @@ const router = createBrowserRouter([
   {
     path: "/cart",
     element: <CartPage />,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: "/checkout",
+    element: <CheckoutPage />,
     errorElement: <RouteErrorBoundary />,
   },
   {

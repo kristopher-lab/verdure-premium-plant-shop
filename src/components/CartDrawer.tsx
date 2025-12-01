@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter, SheetDescription } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import { useCart, useCartActions, useCartUi } from '@/hooks/use-cart';
 import { Link } from 'react-router-dom';
@@ -45,10 +45,10 @@ export function CartDrawer() {
             )}
           </Button>
         </SheetTrigger>
-        <SheetContent className="w-full sm:max-w-md flex flex-col" role="dialog" aria-modal="true" aria-labelledby="cart-title" aria-describedby="cart-description">
+        <SheetContent className="w-full sm:max-w-md flex flex-col" role="dialog" aria-modal="true" aria-labelledby="cart-title">
           <SheetHeader>
             <SheetTitle id="cart-title" className="text-2xl font-display">Your Cart</SheetTitle>
-            <p id="cart-description" className="sr-only">A summary of items in your shopping cart.</p>
+            <SheetDescription className="sr-only">A summary of items in your shopping cart.</SheetDescription>
           </SheetHeader>
           <Separator />
           {cart && cart.items.length > 0 ? (
@@ -71,7 +71,7 @@ export function CartDrawer() {
           <SheetFooter className="mt-auto">
             <div className="w-full space-y-2">
               <Button size="lg" className="w-full" asChild variant="outline">
-                <Link to="/cart" onClick={() => toggleCart(false)}>View Full Cart</Link>
+                <Link to="/checkout" onClick={() => toggleCart(false)}>View Cart & Checkout</Link>
               </Button>
               <Button size="lg" className="w-full btn-gradient" onClick={handleCheckout} disabled={isCheckingOut || itemCount === 0}>
                 {isCheckingOut ? 'Processing...' : 'Proceed to Checkout'}
