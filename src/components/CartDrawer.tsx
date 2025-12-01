@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { GuestCheckoutModal } from './GuestCheckoutModal';
 import { motion } from 'framer-motion';
-const formatPrice = (price: number) => `$${(price / 100).toFixed(2)}`;
+const formatPrice = (price: number) => `${(price / 100).toFixed(2)}`;
 export function CartDrawer() {
   const { data: cart } = useCart();
   const { isCartOpen, discount } = useCartUi();
@@ -36,7 +36,7 @@ export function CartDrawer() {
     <>
       <Sheet open={isCartOpen} onOpenChange={toggleCart}>
         <SheetTrigger asChild>
-          <Button variant="outline" size="icon" className="relative" aria-label={`Open cart, ${itemCount} items`}>
+          <Button variant="outline" size="icon" className="relative min-h-11 min-w-11" aria-label={`Open cart, ${itemCount} items`}>
             <ShoppingCart className="h-5 w-5" />
             {itemCount > 0 && (
               <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
@@ -70,10 +70,10 @@ export function CartDrawer() {
           )}
           <SheetFooter className="mt-auto">
             <div className="w-full space-y-2">
-              <Button size="lg" className="w-full" asChild variant="outline">
+              <Button size="lg" className="w-full min-h-11" asChild variant="outline" aria-label="View cart details and checkout">
                 <Link to="/checkout" onClick={() => toggleCart(false)}>View Cart & Checkout</Link>
               </Button>
-              <Button size="lg" className="w-full btn-gradient" onClick={handleCheckout} disabled={isCheckingOut || itemCount === 0}>
+              <Button size="lg" className="w-full btn-gradient min-h-11" onClick={handleCheckout} disabled={isCheckingOut || itemCount === 0} aria-label="Proceed to checkout">
                 {isCheckingOut ? 'Processing...' : 'Proceed to Checkout'}
               </Button>
             </div>

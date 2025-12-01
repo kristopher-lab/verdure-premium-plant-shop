@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Leaf, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -66,7 +66,7 @@ function SearchParamsWrapper({ setQuickViewProduct, handleAddToCart }: SearchPar
           <AccordionContent className="space-y-2">
             {categories.map(cat => (
               <div key={cat} className="flex items-center space-x-2">
-                <Checkbox id={cat} onCheckedChange={() => handleFilterChange('categories', cat)} checked={filters.categories.includes(cat)} />
+                <Checkbox id={cat} onCheckedChange={() => handleFilterChange('categories', cat)} checked={filters.categories.includes(cat)} aria-label={`Filter by category: ${cat}`} />
                 <label htmlFor={cat} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{cat}</label>
               </div>
             ))}
@@ -75,7 +75,7 @@ function SearchParamsWrapper({ setQuickViewProduct, handleAddToCart }: SearchPar
         <AccordionItem value="price">
           <AccordionTrigger className="text-lg">Price Range</AccordionTrigger>
           <AccordionContent className="pt-4">
-            <Slider defaultValue={filters.priceRange} max={200} step={10} onValueCommit={handlePriceChange} />
+            <Slider defaultValue={filters.priceRange} max={200} step={10} onValueCommit={handlePriceChange} aria-valuetext={`Price range from $${filters.priceRange[0]} to $${filters.priceRange[1]}`} />
             <div className="flex justify-between text-sm text-muted-foreground mt-2">
               <span>${filters.priceRange[0]}</span>
               <span>${filters.priceRange[1]}</span>
@@ -87,7 +87,7 @@ function SearchParamsWrapper({ setQuickViewProduct, handleAddToCart }: SearchPar
           <AccordionContent className="space-y-2">
             {tags.map(tag => (
               <div key={tag} className="flex items-center space-x-2">
-                <Checkbox id={tag} onCheckedChange={() => handleFilterChange('tags', tag)} checked={filters.tags.includes(tag)} />
+                <Checkbox id={tag} onCheckedChange={() => handleFilterChange('tags', tag)} checked={filters.tags.includes(tag)} aria-label={`Filter by feature: ${tag}`} />
                 <label htmlFor={tag} className="text-sm font-medium leading-none">{tag}</label>
               </div>
             ))}
@@ -102,7 +102,7 @@ function SearchParamsWrapper({ setQuickViewProduct, handleAddToCart }: SearchPar
       <div className="lg:col-span-9">
         <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-4">
           <div className="relative w-full sm:max-w-xs">
-            <Input placeholder="Search plants..." className="pl-10" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+            <Input placeholder="Search plants..." className="pl-10" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} aria-label="Search plants" />
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           </div>
           <p className="text-sm text-muted-foreground">{filteredProducts?.length ?? 0} products found</p>
@@ -115,7 +115,7 @@ function SearchParamsWrapper({ setQuickViewProduct, handleAddToCart }: SearchPar
             show: {
               opacity: 1,
               transition: {
-                staggerChildren: 0.1,
+                staggerChildren: 0.05,
               },
             },
           }}
@@ -150,15 +150,16 @@ export function HomePage() {
   const { addToCart, isAuthenticated, logout } = useCartActions();
   const { orderId, actions } = useCartUi();
   const { setOrderId } = actions;
+  const location = useLocation();
   const handleAddToCart = (product: Product, variantSku: string, quantity: number) => {
     addToCart({ product, variantSku, quantity });
   };
   return (
     <div className="bg-background min-h-screen">
       <a href="#product-grid" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-background focus:text-foreground">Skip to main content</a>
-      <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60" role="navigation">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-          <Link to="/" className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2" aria-current={location.pathname === '/' ? 'page' : undefined}>
             <Leaf className="h-8 w-8 text-primary" />
             <h1 className="text-2xl font-bold font-display text-primary">Verdure</h1>
           </Link>
@@ -205,7 +206,7 @@ export function HomePage() {
       </main>
       <footer className="border-t">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Verdure. Built with ❤️ at Cloudflare.</p>
+          <p>&copy; {new Date().getFullYear()} Verdure. Built with ❤��� at Cloudflare.</p>
         </div>
       </footer>
       <ProductQuickView

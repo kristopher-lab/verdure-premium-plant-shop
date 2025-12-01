@@ -13,7 +13,8 @@ import type { CartItem } from '@shared/types';
 import { GuestCheckoutModal } from '@/components/GuestCheckoutModal';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { OrderConfirmation } from '@/components/OrderConfirmation';
-const formatPrice = (price: number) => `$${(price / 100).toFixed(2)}`;
+import { Skeleton } from '@/components/ui/skeleton';
+const formatPrice = (price: number) => `${(price / 100).toFixed(2)}`;
 function CartItemView({ item }: { item: CartItem }) {
   const { updateQuantity, removeFromCart } = useCartActions();
   return (
@@ -25,7 +26,7 @@ function CartItemView({ item }: { item: CartItem }) {
       transition={{ duration: 0.3 }}
       className="flex items-start gap-4 py-4"
     >
-      <img src={item.image} alt={item.name} className="w-24 h-24 object-cover rounded-md border" />
+      <img src={item.image} alt={item.name} className="w-24 h-24 object-cover rounded-md border" loading="lazy" />
       <div className="flex-grow">
         <h3 className="font-semibold text-lg">{item.name}</h3>
         <p className="text-sm text-muted-foreground">{item.variantName}</p>
@@ -71,7 +72,7 @@ export default function CartPage() {
   };
   return (
     <div className="bg-background min-h-screen">
-      <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60" role="navigation">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-2">
             <Leaf className="h-8 w-8 text-primary" />
@@ -88,7 +89,19 @@ export default function CartPage() {
           <div className="py-8 md:py-10 lg:py-12">
             <h1 className="text-4xl font-bold font-display mb-8">Your Cart</h1>
             {isLoading ? (
-              <p>Loading cart...</p>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                <Card className="lg:col-span-2 space-y-4 p-6">
+                  <Skeleton className="h-24 w-full" />
+                  <Skeleton className="h-24 w-full" />
+                  <Skeleton className="h-24 w-full" />
+                </Card>
+                <Card className="sticky top-24 p-6 space-y-4">
+                  <Skeleton className="h-8 w-1/2" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-20 w-full" />
+                  <Skeleton className="h-12 w-full" />
+                </Card>
+              </div>
             ) : !cart || cart.items.length === 0 ? (
               <div className="text-center py-16 border-2 border-dashed rounded-lg">
                 <ShoppingCart className="h-16 w-16 text-muted-foreground/50 mx-auto mb-4" />
@@ -118,7 +131,7 @@ export default function CartPage() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex items-center gap-2">
-                      <Input placeholder="Promo code" value={promoInput} onChange={(e) => setPromoInput(e.target.value)} aria-label="Promo code" />
+                      <Input placeholder="Promo code" value={promoInput} onChange={(e) => setPromoInput(e.target.value)} aria-label="Promo code" id="promo-code" />
                       <Button variant="outline" onClick={() => applyPromoCode(promoInput)}>Apply</Button>
                     </div>
                     <Separator />

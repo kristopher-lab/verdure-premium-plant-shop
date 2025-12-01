@@ -14,7 +14,7 @@ import { useProduct } from '@/hooks/use-products';
 import { useCartMutations, useCartUi, useCartUiActions } from '@/hooks/use-cart';
 import { RelatedProductsCarousel } from '@/components/RelatedProductsCarousel';
 import { OrderConfirmation } from '@/components/OrderConfirmation';
-const formatPrice = (price: number) => `$${(price / 100).toFixed(2)}`;
+const formatPrice = (price: number) => `${(price / 100).toFixed(2)}`;
 function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
   const { data: product, isLoading, error } = useProduct(slug || '');
@@ -31,12 +31,16 @@ function ProductDetail() {
   if (isLoading) return <ProductDetailSkeleton />;
   if (error || !product) {
     return (
-      <div className="flex items-center justify-center h-screen text-center">
-        <div>
-          <h2 className="text-2xl font-semibold">Product not found</h2>
-          <Button asChild variant="link" className="mt-4">
-            <Link to="/">Go back to shopping</Link>
-          </Button>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="py-8 md:py-10 lg:py-12">
+          <div className="flex flex-col items-center justify-center h-screen text-center">
+            <div>
+              <h2 className="text-2xl font-semibold">Product not found</h2>
+              <Button asChild variant="link" className="mt-4">
+                <Link to="/">Go back to shopping</Link>
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -50,7 +54,7 @@ function ProductDetail() {
   const isOutOfStock = !selectedVariant || selectedVariant.inventory <= 0;
   return (
     <div className="bg-background min-h-screen">
-      <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60" role="navigation">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
           <Button asChild variant="ghost">
             <Link to="/" className="flex items-center gap-2">
@@ -67,7 +71,7 @@ function ProductDetail() {
       <main role="main" aria-label="Product details" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="py-8 md:py-10 lg:py-12">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
-            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}>
               <img src={product.images[0]} alt={product.name} className="w-full h-auto object-cover rounded-lg shadow-lg aspect-square" loading="lazy" />
             </motion.div>
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}>
@@ -79,11 +83,11 @@ function ProductDetail() {
               <div className="mt-6 space-y-6">
                 <div>
                   <Label className="text-base font-semibold">Size</Label>
-                  <RadioGroup value={selectedVariantSku} onValueChange={setSelectedVariantSku} className="flex gap-2 mt-2">
+                  <RadioGroup value={selectedVariantSku} onValueChange={setSelectedVariantSku} className="flex gap-2 mt-2" aria-label="Select product size">
                     {product.variants.map(variant => (
                       <div key={variant.sku}>
                         <RadioGroupItem value={variant.sku} id={`detail-${variant.sku}`} className="sr-only" />
-                        <Label htmlFor={`detail-${variant.sku}`} className="flex items-center justify-center rounded-md border-2 border-muted bg-popover px-4 py-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary cursor-pointer">
+                        <Label htmlFor={`detail-${variant.sku}`} className="flex items-center justify-center rounded-md border-2 border-muted bg-popover px-4 py-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground [&:has([data-state=checked])]:border-primary cursor-pointer" aria-label={`Select ${variant.name} size`}>
                           {variant.name}
                           {variant.inventory <= 0 && <Badge variant="destructive" className="ml-2">Out of Stock</Badge>}
                         </Label>
@@ -94,13 +98,13 @@ function ProductDetail() {
                 <div className="flex items-center gap-4">
                   <Label className="text-base font-semibold">Quantity</Label>
                   <div className="flex items-center gap-2 border rounded-md p-1">
-                    <Button variant="ghost" size="icon" onClick={() => setQuantity(q => Math.max(1, q - 1))}><Minus className="h-4 w-4" /></Button>
-                    <span className="w-10 text-center font-semibold">{quantity}</span>
-                    <Button variant="ghost" size="icon" onClick={() => setQuantity(q => q + 1)}><Plus className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => setQuantity(q => Math.max(1, q - 1))} aria-label="Decrease quantity"><Minus className="h-4 w-4" /></Button>
+                    <span className="w-10 text-center font-semibold" aria-live="polite">{quantity}</span>
+                    <Button variant="ghost" size="icon" onClick={() => setQuantity(q => q + 1)} aria-label="Increase quantity"><Plus className="h-4 w-4" /></Button>
                   </div>
                 </div>
               </div>
-              <Button size="lg" className="w-full mt-8 btn-gradient" onClick={handleAddToCart} disabled={isOutOfStock}>
+              <Button size="lg" className="w-full mt-8 btn-gradient" onClick={handleAddToCart} disabled={isOutOfStock} aria-label={`Add ${product.name} to cart`}>
                 {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
               </Button>
             </motion.div>

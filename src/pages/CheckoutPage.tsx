@@ -13,7 +13,7 @@ import type { CartItem } from '@shared/types';
 import { GuestCheckoutModal } from '@/components/GuestCheckoutModal';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { OrderConfirmation } from '@/components/OrderConfirmation';
-const formatPrice = (price: number) => `$${(price / 100).toFixed(2)}`;
+const formatPrice = (price: number) => `${(price / 100).toFixed(2)}`;
 function CartItemView({ item }: { item: CartItem }) {
   const { updateQuantity, removeFromCart } = useCartActions();
   return (
@@ -25,7 +25,7 @@ function CartItemView({ item }: { item: CartItem }) {
       transition={{ duration: 0.3 }}
       className="flex items-start gap-4 py-4"
     >
-      <img src={item.image} alt={item.name} className="w-24 h-24 object-cover rounded-md border" />
+      <img src={item.image} alt={item.name} className="w-24 h-24 object-cover rounded-md border" loading="lazy" />
       <div className="flex-grow">
         <h3 className="font-semibold text-lg">{item.name}</h3>
         <p className="text-sm text-muted-foreground">{item.variantName}</p>
@@ -71,7 +71,7 @@ export default function CheckoutPage() {
   };
   return (
     <div className="bg-background min-h-screen">
-      <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60" role="navigation">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-2">
             <Leaf className="h-8 w-8 text-primary" />
@@ -118,8 +118,8 @@ export default function CheckoutPage() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex items-center gap-2">
-                      <Input placeholder="Promo code" value={promoInput} onChange={(e) => setPromoInput(e.target.value)} aria-label="Promo code" />
-                      <Button variant="outline" onClick={() => applyPromoCode(promoInput)}>Apply</Button>
+                      <Input placeholder="Promo code" value={promoInput} onChange={(e) => setPromoInput(e.target.value)} aria-label="Enter promo code" />
+                      <Button variant="outline" onClick={() => applyPromoCode(promoInput)} aria-label="Apply discount">Apply</Button>
                     </div>
                     <Separator />
                     <div className="space-y-2">
@@ -142,7 +142,7 @@ export default function CheckoutPage() {
                         <span>{formatPrice(total)}</span>
                       </div>
                     </div>
-                    <Button size="lg" className="w-full btn-gradient" onClick={handleCheckout} disabled={isCheckingOut}>
+                    <Button size="lg" className="w-full btn-gradient" onClick={handleCheckout} disabled={isCheckingOut} aria-label="Complete purchase">
                       {isCheckingOut ? 'Processing...' : 'Complete Purchase'}
                     </Button>
                   </CardContent>
